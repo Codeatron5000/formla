@@ -2,9 +2,10 @@
   "name": "ajax-form",
   "version": "1.0.0",
   "description": "A form object that makes sending ajax forms a breeze",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "test"
+    "build": "babel src/ -d lib/",
+    "prepublish": "yarn run build"
   },
   "keywords": [
     "form",
@@ -13,5 +14,11 @@
     "errors"
   ],
   "author": "Codatron5000",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-flow": "^6.23.0",
+    "flow-bin": "^0.100.0",
+    "jasmine": "^3.4.0"
+  }
 }
