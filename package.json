@@ -1,0 +1,17 @@
+{
+  "name": "ajax-form",
+  "version": "1.0.0",
+  "description": "A form object that makes sending ajax forms a breeze",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "form",
+    "ajax",
+    "xhr",
+    "errors"
+  ],
+  "author": "Codatron5000",
+  "license": "ISC"
+}
