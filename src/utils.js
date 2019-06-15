@@ -37,3 +37,23 @@ export function emptyValue(original) {
     }
     return null;
 }
+
+export function isUndef(value) {
+    return typeof value === 'undefined';
+}
+
+export function isObj(value) {
+    return typeof value === 'object';
+}
+
+export function isArr(value) {
+    return value instanceof Array;
+}
+
+export function isNil(value) {
+    return value == null;
+}
+
+export function isFunc(value) {
+    return value instanceof Function;
+}

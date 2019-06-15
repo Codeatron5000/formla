@@ -1,5 +1,22 @@
-import {isFile, fileTooBig, mixin, clone, hasOwn, emptyValue} from "./utils";
+import {isFile, fileTooBig, mixin, clone, hasOwn, emptyValue, isUndef, isObj, isArr, isNil} from "./utils";
 import Errors from "./Errors";
+
+function parseOptions(method, url, options) {
+    if (isObj(method)) {
+        return method;
+    }
+    if (isObj(url)) {
+        return {
+            method,
+            ...url,
+        };
+    }
+    return {
+        method,
+        url,
+        ...options,
+    };
+}
 
 class Form {
 
@@ -127,60 +144,31 @@ class Form {
     }
 
     submit(method, url, options) {
-        if (typeof method === 'object') {
-            options = method;
-        }
-        this.setOptions(options);
+        this.setOptions(parseOptions(method, url, options));
 
-        let formData, hasFile = this.hasFile();
+        let formData, hasFile = this.hasFile(), data = this.getData();
         if (hasFile) {
-            if (this.tooBig()) {
-                // Made the below change so that the 'TooBig' file be cleared out from the object.
-                _(this.data()).each((val, key) => {
-                    if (isTooBig(key, this.maxSize)) {
-                        this[val] = null;
-                    }
-                });
-
-                notify(trans('common.file-size', {
-                    attribute: 'file',
-                    max: this.maxSize
-                }), 'alert')
-                return Promise.reject(new Error('file too big'));
-            }
             formData = new FormData();
-            _(this.data()).each((value, key) => {
-                if (key === 'customValues'){
-                    formData.append(key, JSON.stringify(value));
-                } else if (_.isArray(value)) {
-                    _.each(value, val => {
-                        formData.append(`${key}[]`, val);
-                    });
-                } else if(_.isObject(value) && value.constructor !== File && value.constructor !== Blob){
-                    formData.append(key, JSON.stringify(value));
-                } else if (_.isBoolean(value) && value.constructor !== File && value.constructor !== Blob) {
-                    formData.append(key, +value);
+
+            for (let key in data) {
+                let value = data[key];
+                if (isObj(value)) {
+                    for (let index in value) {
+                        let item = value[index];
+                        if (isObj(item)) {
+                            throw new Error('Cannot have nested objects in a form with a file');
+                        }
+                        formData.append(`${key}[${index}]`, item);
+                    }
+                } else {
+                    formData.append(key, isNil(value) ? '' : value);
                 }
-                else if (_.isNull(value) || _.isUndefined(value)) {
-                    formData.append(key, "");
-                }
-                else {
-                    formData.append(key, value);
-                }
-            });
-            if (method !== 'post') {
-                formData.append('_method', method.toUpperCase());
-                method = 'post';
+                data = formData;
             }
-        }
-        formData = hasFile ? formData : this.data();
-        if (this.formatDataCallback) {
-            formData = this.formatDataCallback(formData);
+        } else {
+            data = JSON.stringify(data);
         }
 
-        if (!hasFile) {
-            formData = JSON.stringify(formData);
-        }
         return $.ajax({
             method,
             url,
