@@ -1,5 +1,6 @@
 import {isFile, fileTooBig, mixin, clone, hasOwn, emptyValue, isUndef, isObj, isArr, isNil} from "./utils";
 import Errors from "./Errors";
+import http from "./http";
 
 function parseOptions(method, url, options) {
     if (isObj(method)) {
@@ -29,6 +30,8 @@ class Form {
         clone: true,
         autoRemoveError: true,
         uploadLimit: null,
+        responseType: 'json',
+        validationStatusCode: 422,
     };
 
     constructor(data, options) {
@@ -169,62 +172,64 @@ class Form {
             data = JSON.stringify(data);
         }
 
-        return $.ajax({
-            method,
-            url,
-            processData: !hasFile,
-            dataType: 'json',
-            contentType: hasFile ? false : 'application/json',
-            data: formData,
-            success: (response) => {
-                if (options.redirect && response.hasOwnProperty('redirect')) {
-                    window.location.replace(response.redirect);
-                }
-                setTimeout(() => this.onSuccess(response, options.clear), 20);
+        let httpAdapter = this.options.httpAdapter || http;
+
+        return httpAdapter({
+            ...this.options,
+            headers: {
+                'Content-Type': hasFile && 'application/json'
             },
-            error: (error) => {
-                if (!options.quiet) {
-                    this.onFail(error, options.scrollToFirstError, options.timeout);
-                }
+            responseType: this.options.responseType,
+        }).then(response => {
+            this.onSuccess(response);
+        }).catch(error => {
+            if (!this.options.quiet) {
+                this.onFail(error);
             }
-        }).then(response => (response.meta || !_.has(response, 'data')) ? response : response.data);
+        });
     }
 
     hasFile() {
         return Object.values(this.data).some(isFile);
     }
 
-
-
-    onSuccess(response, clear) {
-        if (clear) {
+    onSuccess(response) {
+        if (this.options.clear) {
             this.reset();
         }
     }
 
-    onFail(error, scrollToFirstError, timeout) {
-        handleNalError(error, window.nal && window.nal.project)
-
-        if (+error.status === 422) {
-            this.errors.record(error.responseJSON && error.responseJSON.errors, timeout);
+    onFail(error) {
+        if (+error.status === this.options.validationStatusCode) {
+            this.errors.record(error.response.errors, this.options.timeout);
+            let scrollToFirstError = this.options.scrollToFirstError;
             if (scrollToFirstError) {
                 if (typeof scrollToFirstError !== 'object') {
-                    scrollToFirstError = {behavior: 'smooth', inline: 'center'}
+                    scrollToFirstError = { behavior: 'smooth', inline: 'center' }
                 }
                 this.errors.scrollToFirst(scrollToFirstError);
             }
-            this.clear('password');
-            this.clear('password_confirmation');
         }
     }
 
     makeUrl(url) {
-        let fullUrl = url+'?';
+        url = url || this.options.url;
+        let queryStart = url.includes('?') ? '&' : '?';
+        let fullUrl = url + queryStart;
         let properties = [];
-        for (let key in this.data()) {
-            let value = ((typeof this[key] === 'object') && ('toString' in this[key])) ? this[key].toString() : this[key];
-            if (value) {
-                properties.push(key+'='+value);
+        let data = this.getData();
+        for (let key in data) {
+            let value = data[key];
+            if (isObj(value)) {
+                for (let index in value) {
+                    let item = value[index];
+                    if (isObj(item)) {
+                        throw new Error('Cannot have nested objects in a query string');
+                    }
+                    properties.push(`${key}[${index}]=item`);
+                }
+            } else {
+                properties.push(key + (isNil(value) ? '' : '=' + value));
             }
         }
         return fullUrl + properties.join('&');
