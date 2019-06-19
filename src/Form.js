@@ -84,11 +84,6 @@ class Form {
         return this.append(key, value, true);
     }
 
-    formatData(cb) {
-        this.formatDataCallback = cb;
-        return this;
-    }
-
     getData() {
         return {
             ...this.data,
@@ -177,11 +172,11 @@ class Form {
         return httpAdapter({
             ...this.options,
             headers: {
-                'Content-Type': hasFile && 'application/json'
+                'Content-Type': hasFile && 'application/json',
+                ...this.options.headers,
             },
-            responseType: this.options.responseType,
-        }).then(response => {
-            this.onSuccess(response);
+        }).then(() => {
+            this.onSuccess();
         }).catch(error => {
             if (!this.options.quiet) {
                 this.onFail(error);
@@ -193,7 +188,7 @@ class Form {
         return Object.values(this.data).some(isFile);
     }
 
-    onSuccess(response) {
+    onSuccess() {
         if (this.options.clear) {
             this.reset();
         }

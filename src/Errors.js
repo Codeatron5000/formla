@@ -1,3 +1,5 @@
+import {isArr} from "./utils";
+
 class Errors {
     /**
      * Create a new Errors instance.
@@ -35,10 +37,15 @@ class Errors {
      *
      * @param {string} field
      */
-    get(field) {
-        if (this.errors[field]) {
-            return typeof this.errors[field] === 'object' ? this.errors[field][0] : this.errors[field];
+    getFirst(field) {
+        let error = this.get(field)
+        if (error && error.length) {
+            return error[0];
         }
+    }
+
+    get(field) {
+        return this.errors[field];
     }
 
     /**
