@@ -57,3 +57,7 @@ export function isNil(value) {
 export function isFunc(value) {
     return value instanceof Function;
 }
+
+export function escapeRegExp(string) {
+    return string.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+}

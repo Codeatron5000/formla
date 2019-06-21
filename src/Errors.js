@@ -1,11 +1,10 @@
-import {isArr} from "./utils";
+import {escapeRegExp, isArr} from "./utils";
 
 class Errors {
     /**
      * Create a new Errors instance.
      */
-    constructor(form) {
-        this.form = form;
+    constructor() {
         this.errors = {};
         this.elements = {};
     }
@@ -38,7 +37,7 @@ class Errors {
      * @param {string} field
      */
     getFirst(field) {
-        let error = this.get(field)
+        let error = this.get(field);
         if (error && error.length) {
             return error[0];
         }
@@ -53,9 +52,10 @@ class Errors {
      *
      * @param {string} field
      * @param error
+     * @param force
      */
-    add(field, error) {
-        if (!this.has(field)) {
+    add(field, error, force = false) {
+        if (!this.has(field) || force) {
             this.errors[field] = error;
         }
     }
@@ -65,6 +65,7 @@ class Errors {
      * Record the new errors.
      *
      * @param {object} errors
+     * @param timeout
      */
     record(errors, timeout = 3000) {
         this.errors = errors;
@@ -91,25 +92,23 @@ class Errors {
         this.errors = {};
     }
 
-    addElement(key, el, useAlert) {
-        this.elements[key] = { el, useAlert };
+    addElement(key, el) {
+        this.elements[key] = el;
     }
 
     scrollToFirst(options = null) {
         options = options || { behavior: 'smooth', inline: 'center' };
-        Vue.nextTick(() => {
-            for (let key in this.elements) {
-                let rx = new RegExp(key.replace('*', '.*'));
-                if (Object.keys(this.errors).some(key => rx.test(key))) {
-                    let { el, useAlert } = this.elements[key];
-                    if (useAlert) {
-                        el = el.getElementsByClassName('c-alert-tooltip')[0];
-                    }
-                    el.scrollIntoView(options);
-                    break;
-                }
+
+        for (let key in this.elements) {
+            let rx = escapeRegExp(key);
+            rx = new RegExp(rx.replace('*', '.*'));
+
+            if (Object.keys(this.errors).some(key => rx.test(key))) {
+                let el = this.elements[key];
+                el.scrollIntoView(options);
+                break;
             }
-        });
+        }
     }
 }
 

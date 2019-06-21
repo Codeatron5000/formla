@@ -41,7 +41,7 @@ class Form {
 
         this.append(data);
 
-        this.errors = new Errors(this);
+        this.errors = new Errors();
 
         this.setOptions(options);
     }
