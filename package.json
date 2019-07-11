@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src/ -d lib/",
-    "prepublish": "yarn run build"
+    "prepublish": "yarn run build",
+    "test": "jest"
   },
   "keywords": [
     "form",
@@ -16,9 +17,12 @@
   "author": "Codatron5000",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.5.4",
+    "@babel/preset-env": "^7.5.4",
     "babel-cli": "^6.26.0",
+    "babel-jest": "^24.8.0",
     "babel-preset-flow": "^6.23.0",
     "flow-bin": "^0.100.0",
-    "jasmine": "^3.4.0"
+    "jest": "^24.8.0"
   }
 }
