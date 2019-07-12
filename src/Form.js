@@ -12,7 +12,24 @@ type ErrorResponse = {
     }
 }
 
-function parseOptions(method, url, options) {
+type FormValue = string | number | boolean | File | Blob | Array<FormValue> | { [string]: FormValue }
+
+type Data = { [string]: FormValue }
+
+type Options = {
+    url: ?string,
+    clear: boolean,
+    quiet: boolean,
+    scrollToFirstError: boolean,
+    timeout: boolean,
+    clone: boolean,
+    autoRemoveError: boolean,
+    uploadLimit: ?number,
+    responseType: string,
+    validationStatusCode: number,
+}
+
+function parseOptions(method: string | Options, url: ?string | Options, options: ?Options): Options {
     if (isObj(method)) {
         return method;
     }
@@ -29,15 +46,14 @@ function parseOptions(method, url, options) {
     };
 }
 
-type FormValues = string | number | boolean | File | Blob | Array<FormValues> | { [string]: FormValues }
 
 class Form {
 
     errors: Errors;
 
-    data: { [string]: FormValues };
+    data: { [string]: FormValue };
 
-    static defaultOptions = {
+    static defaultOptions: Options = {
         url: null,
         clear: true,
         quiet: false,
@@ -50,13 +66,13 @@ class Form {
         validationStatusCode: 422,
     };
 
-    static setDefaultOptions = function (options) {
+    static setDefaultOptions = function (options: Options) {
         Form.defaultOptions = mixin(Form.defaultOptions, options);
     };
 
     options = {};
 
-    constructor(data, options) {
+    constructor(data: Data, options: ?Options) {
         this.originalData = {};
         this.originalConstantData = {};
         this.data = {};
@@ -68,12 +84,12 @@ class Form {
         this.setOptions(options);
     }
 
-    setOptions(options) {
+    setOptions(options: Options) {
         this.options = this.options || Form.defaultOptions;
         this.options = mixin(this.options, options || {});
     }
 
-    append(key, value, constant = false) {
+    append(key: string, value: FormValue, constant: boolean = false): Form {
         if (typeof key === 'object') {
             for (let field in key) {
                 this.append(field, key[field], constant);
@@ -102,18 +118,18 @@ class Form {
         return this;
     }
 
-    constantData(key, value) {
+    constantData(key: string, value: FormValue): Form {
         return this.append(key, value, true);
     }
 
-    getData() {
+    getData(): Data {
         return {
             ...this.data,
             ...this.originalConstantData,
         }
     }
 
-    reset() {
+    reset(): Form {
         for (let field in this.data) {
             this.data[field] = this.originalData[field];
         }
@@ -123,18 +139,18 @@ class Form {
         return this;
     }
 
-    clear(field) {
+    clear(field: string): Form {
         if (hasOwn(this, field)) {
             this.data[field] = emptyValue(this[field]);
         }
         return this;
     }
 
-    parseData(data) {
+    parseData(data: Data): Data {
         return this.options.clone ? clone(data) : data;
     }
 
-    addFileFromEvent(event, key) {
+    addFileFromEvent(event: Event, key: string): Form {
         key = key || event.target.name;
         if (key in this && (event.target.value !== '')) {
             this[key] = event.target.files[0] || event.dataTransfer.files[0];
