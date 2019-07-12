@@ -1,5 +1,5 @@
 // @flow
-import { isFile, mixin, clone, hasOwn, emptyValue, isObj, isNil } from "./utils";
+import {isFile, mixin, clone, hasOwn, emptyValue, isObj, isNil, isArr} from "./utils";
 import Errors from "./Errors";
 import http from "./http";
 
@@ -12,11 +12,22 @@ type ErrorResponse = {
     }
 }
 
-type FormValue = string | number | boolean | File | Blob | Array<FormValue> | { [string]: FormValue }
+type PrimitiveFormValue = string | number | boolean;
 
-type Data = { [string]: FormValue }
+type JsonFormValue = PrimitiveFormValue | Array<JsonFormValue> | { [string]: JsonFormValue };
+type ShallowFormValue = PrimitiveFormValue | Array<PrimitiveFormValue> | { [string]: PrimitiveFormValue };
+type FormValueWithFile = ShallowFormValue | File | Blob;
+type FormValue = JsonFormValue | FormValueWithFile;
+
+type JsonData = { [string]: JsonFormValue };
+type ShallowData = { [string]: ShallowFormValue };
+type DataWithFile = { [string]: FormValueWithFile };
+type Data = JsonData | DataWithFile;
+
+type Method = 'get' | 'post' | 'put' | 'patch' | 'head' | 'option' | 'delete';
 
 type Options = {
+    method: ?Method,
     url: ?string,
     clear: boolean,
     quiet: boolean,
@@ -46,14 +57,28 @@ function parseOptions(method: string | Options, url: ?string | Options, options:
     };
 }
 
+function isUrlSerializable(value: FormValue): boolean %checks {
+    return isObj(value) && typeof value !== File && typeof value !== Blob;
+}
+
+function FormValueToString(value: PrimitiveFormValue): string {
+    if (typeof value === 'boolean') {
+        return ''+(+value);
+    }
+    if (typeof value === 'number') {
+        return value.toString();
+    }
+    return value;
+}
 
 class Form {
 
     errors: Errors;
 
-    data: { [string]: FormValue };
+    data: Data;
 
     static defaultOptions: Options = {
+        method: null,
         url: null,
         clear: true,
         quiet: false,
@@ -150,36 +175,39 @@ class Form {
         return this.options.clone ? clone(data) : data;
     }
 
-    addFileFromEvent(event: Event, key: string): Form {
-        key = key || event.target.name;
-        if (key in this && (event.target.value !== '')) {
-            this[key] = event.target.files[0] || event.dataTransfer.files[0];
+    addFileFromEvent(event: Event | DragEvent, key: string): Form {
+        let node: HTMLInputElement = event.target;
+        if (!key) {
+            key = node.name;
+        }
+        if (key in this && (node.value !== '')) {
+            this[key] = node.files[0] || event.dataTransfer.files[0];
             event.target.value = '';
         }
         return this;
     }
 
-    post(url, options = null) {
+    post(url: string | Options, options: ?Options): Promise {
         return this.submit('post', url, options);
     }
 
-    put(url, options = null) {
+    put(url: string | Options, options: ?Options): Promise {
         return this.submit('put', url, options);
     }
 
-    patch(url, options = null) {
+    patch(url: string | Options, options: Options): Promise {
         return this.submit('patch', url, options);
     }
 
-    delete(url, options = null) {
+    delete(url: string | Options, options: Options): Promise {
         return this.submit('delete', url, options);
     }
 
-    get(url, options = null) {
+    get(url: string | Options, options: Options): Promise {
         return this.submit('get', url, options);
     }
 
-    submit(method, url, options) {
+    submit(method: Method | Options, url: ?string | Options, options: ?Options): Promise {
         this.setOptions(parseOptions(method, url, options));
 
         let formData, hasFile = this.hasFile(), data = this.getData();
@@ -222,7 +250,7 @@ class Form {
         });
     }
 
-    hasFile() {
+    hasFile(): boolean {
         return Object.values(this.data).some(isFile);
     }
 
@@ -253,13 +281,22 @@ class Form {
         let data = this.getData();
         for (let key in data) {
             let value = data[key];
-            if (isObj(value)) {
-                for (let index in value) {
-                    let item = value[index];
-                    if (isObj(item)) {
-                        throw new Error('Cannot have nested objects in a query string');
+            if (isUrlSerializable(value)) {
+                if (isArr(value)) {
+                    properties = properties.concat(value.map(item => {
+                        if (isObj(item)) {
+                            throw new Error('Cannot have nested objects in a query string');
+                        }
+                        return `${key}[]=${item}`;
+                    }))
+                } else {
+                    for (let index in value) {
+                        let item = value[index];
+                        if (isObj(item)) {
+                            throw new Error('Cannot have nested objects in a query string');
+                        }
+                        properties.push(`${key}[${index}]=${item}`);
                     }
-                    properties.push(`${key}[${index}]=item`);
                 }
             } else {
                 properties.push(key + (isNil(value) ? '' : '=' + value));
