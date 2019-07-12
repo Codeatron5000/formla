@@ -1,4 +1,4 @@
-const Form = require('../src/Form');
+import Form from '../src/Form';
 
 test('Access properties passed to the form', () => {
     const form = new Form({ name: 'Bob' });

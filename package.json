@@ -18,7 +18,9 @@
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.5.4",
+    "@babel/plugin-proposal-class-properties": "^7.5.0",
     "@babel/preset-env": "^7.5.4",
+    "@babel/preset-flow": "^7.0.0",
     "babel-cli": "^6.26.0",
     "babel-jest": "^24.8.0",
     "babel-preset-flow": "^6.23.0",

@@ -1,6 +1,16 @@
-import {isFile, fileTooBig, mixin, clone, hasOwn, emptyValue, isUndef, isObj, isArr, isNil} from "./utils";
+// @flow
+import { isFile, mixin, clone, hasOwn, emptyValue, isObj, isNil } from "./utils";
 import Errors from "./Errors";
 import http from "./http";
+
+type ErrorResponse = {
+    status: number,
+    response: {
+        errors: {
+            [string]: Array<string> | string
+        }
+    }
+}
 
 function parseOptions(method, url, options) {
     if (isObj(method)) {
@@ -19,7 +29,13 @@ function parseOptions(method, url, options) {
     };
 }
 
+type FormValues = string | number | boolean | File | Blob | Array<FormValues> | { [string]: FormValues }
+
 class Form {
+
+    errors: Errors;
+
+    data: { [string]: FormValues };
 
     static defaultOptions = {
         url: null,
@@ -33,6 +49,12 @@ class Form {
         responseType: 'json',
         validationStatusCode: 422,
     };
+
+    static setDefaultOptions = function (options) {
+        Form.defaultOptions = mixin(Form.defaultOptions, options);
+    };
+
+    options = {};
 
     constructor(data, options) {
         this.originalData = {};
@@ -194,7 +216,7 @@ class Form {
         }
     }
 
-    onFail(error) {
+    onFail(error: ErrorResponse) {
         if (+error.status === this.options.validationStatusCode) {
             this.errors.record(error.response.errors, this.options.timeout);
             let scrollToFirstError = this.options.scrollToFirstError;
@@ -207,7 +229,7 @@ class Form {
         }
     }
 
-    makeUrl(url) {
+    makeUrl(url: ?string): string {
         url = url || this.options.url;
         let queryStart = url.includes('?') ? '&' : '?';
         let fullUrl = url + queryStart;
@@ -230,13 +252,10 @@ class Form {
         return fullUrl + properties.join('&');
     }
 
-    addElement(key, el, offset = 0) {
+    addElement(key: string, el: HTMLElement, offset: number = 0) {
         this.errors.addElement(key, el, offset);
     }
 }
 
-Form.setDefaultOptions = function (options) {
-    Form.defaultOptions = mixin(Form.defaultOptions, options);
-};
 
 export default Form;
