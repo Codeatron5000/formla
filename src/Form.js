@@ -12,11 +12,11 @@ type ErrorResponse = {
     }
 }
 
-type PrimitiveFormValue = string | number | boolean;
+type PrimitiveFormValue = string | number | boolean | null | typeof undefined;
 
 type ScalarFormValue = PrimitiveFormValue | Blob | File;
 
-type FormValue = ScalarFormValue | Array<FormValue> | { [string]: FormValue };
+type FormValue = ScalarFormValue | Array<?FormValue> | { [string]: ?FormValue };
 
 type Data = { [string]: FormValue };
 
@@ -36,11 +36,11 @@ type Options = {
     validationStatusCode: number,
 }
 
-function parseOptions(method: string | Options, url: ?string | Options, options: ?Options): Options {
+function parseOptions(method: Method | Options, url: ?(string | Options), options: ?Options): Options {
     if (isObj(method)) {
         return method;
     }
-    if (isObj(url)) {
+    if (url && isObj(url)) {
         return {
             method,
             ...url,
@@ -56,23 +56,37 @@ function parseOptions(method: string | Options, url: ?string | Options, options:
 function flattenToQueryParams(data: Data | Array<FormValue>, prefix: string = ''): { [string]: string | Blob | File } {
     let params = {};
 
-    let keys = isArr(data) ? data.keys() : Object.keys(data);
+    if (isArr(data)) {
+        data.forEach(item => {
+            let paramKey = `${prefix}[]`;
 
-    keys.forEach(key => {
-        let item = data[key];
+            if (isObj(item) && !isFile(item)) {
+                params = {
+                    ...params,
+                    ...flattenToQueryParams(item, paramKey)
+                };
+                return;
+            }
 
-        let paramKey = prefix ? `${prefix}[${key}]` : key;
+            params[paramKey] = isFile(item) ? item : formValueToString(item);
+        })
+    } else {
+        Object.keys(data).forEach(key => {
+            let item = data[key];
 
-        if (isObj(item) && !isFile(item)) {
-            params = {
-                ...params,
-                ...flattenToQueryParams(item, toString, paramKey)
-            };
-            return;
-        }
+            let paramKey = prefix ? `${prefix}[${key}]` : '' + key;
 
-        params[paramKey] = formValueToString(item);
-    });
+            if (isObj(item) && !isFile(item)) {
+                params = {
+                    ...params,
+                    ...flattenToQueryParams(item, paramKey)
+                };
+                return;
+            }
+
+            params[paramKey] = isFile(item) ? item : formValueToString(item);
+        });
+    }
 
     return params;
 }
@@ -84,7 +98,7 @@ function formValueToString(value: PrimitiveFormValue): string {
     if (typeof value === 'number') {
         return value.toString();
     }
-    return value;
+    return value || '';
 }
 
 class Form {
@@ -92,6 +106,8 @@ class Form {
     errors: Errors;
 
     data: Data;
+    originalData: Data;
+    originalConstantData: Data;
 
     static defaultOptions: Options = {
         method: null,
@@ -125,12 +141,12 @@ class Form {
         this.setOptions(options);
     }
 
-    setOptions(options: Options) {
+    setOptions(options: ?Options) {
         this.options = this.options || Form.defaultOptions;
         this.options = mixin(this.options, options || {});
     }
 
-    append(key: string | Data, value: ?FormValue, constant: ?boolean = false): Form {
+    append(key: string | Data, value: FormValue, constant: ?boolean = false): Form {
         if (typeof key === 'object') {
             Object.keys(key).forEach(field => {
                 this.append(field, key[field], constant);
@@ -138,8 +154,11 @@ class Form {
             return this;
         }
 
-        let originalDataKey = constant ? 'originalConstantData' : 'originalData';
-        this[originalDataKey][key] = value;
+        if (constant) {
+            this.originalConstantData[key] = value;
+        } else {
+            this.originalData[key] = value;
+        }
         if (!constant) {
             this.data[key] = this.parseData(value);
             Object.defineProperty(
@@ -147,11 +166,8 @@ class Form {
                 key,
                 {
                     get: () => this.data[key],
-                    set: (newValue) => {
-                        this.data[key] = newValue;
-                        if (this.options.autoRemoveError) {
-                            this.errors.clear(key);
-                        }
+                    set: (newValue: FormValue) => {
+                        this.setData(key, newValue);
                     }
                 }
             );
@@ -160,7 +176,7 @@ class Form {
         return this;
     }
 
-    constantData(key: string | Data, value: ?FormValue): Form {
+    constantData(key: string | Data, value: FormValue): Form {
         return this.append(key, value, true);
     }
 
@@ -168,6 +184,13 @@ class Form {
         return {
             ...this.data,
             ...this.originalConstantData,
+        }
+    }
+
+    setData(key: string, value: FormValue) {
+        this.data[key] = value;
+        if (this.options.autoRemoveError) {
+            this.errors.clear(key);
         }
     }
 
@@ -183,25 +206,28 @@ class Form {
 
     clear(field: string): Form {
         if (hasOwn(this, field)) {
-            this.data[field] = emptyValue(this[field]);
+            this.data[field] = emptyValue(this.data[field]);
         }
         return this;
     }
 
-    parseData(data: Data): Data {
+    parseData(data: FormValue): FormValue {
         return this.options.clone ? clone(data) : data;
     }
 
     addFileFromEvent(event: Event | DragEvent, key: string): Form {
-        let node: HTMLInputElement = event.target;
+        let node = event.target;
+        if (!(node instanceof HTMLInputElement)) {
+            throw new Error('Incompatible event target, must be of type HTMLInputElement');
+        }
         if (!key) {
             key = node.name;
         }
         if (key in this && (node.value !== '')) {
             if (event instanceof DragEvent) {
-                this[key] = event.dataTransfer && event.dataTransfer.files.length && event.dataTransfer.files[0];
+                this.setData(key, event.dataTransfer && event.dataTransfer.files.length && event.dataTransfer.files[0]);
             } else {
-                this[key] = node.files && node.files.length && node.files[0];
+                this.setData(key, node.files && node.files.length && node.files[0]);
             }
             node.value = '';
         }

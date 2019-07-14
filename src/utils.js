@@ -23,11 +23,11 @@ export function mixin(source: Object, target: Object): Object {
     return mix;
 }
 
-export function clone(obj: { [string]: mixed }): string {
+export function clone(obj: any): any {
     return JSON.parse(JSON.stringify(obj));
 }
 
-export function emptyValue(original: mixed): [] | {} | '' | null {
+export function emptyValue(original: mixed): Array<any> | {} | '' | null {
     if (original instanceof Array) {
         return [];
     }
@@ -44,8 +44,8 @@ export function isUndef(value: mixed): %checks {
     return typeof value === 'undefined';
 }
 
-export function isObj(value: mixed): %checks {
-    return typeof value === 'object';
+export function isObj(value: mixed): boolean %checks {
+    return value !== null && typeof value === 'object';
 }
 
 export function isArr(value: mixed): %checks {
