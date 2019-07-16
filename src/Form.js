@@ -334,8 +334,8 @@ class Form {
         return fullUrl + properties.join('&');
     }
 
-    addElement(key: string, el: HTMLElement, offset: number = 0) {
-        this.errors.addElement(key, el, offset);
+    addElement(key: string, el: HTMLElement) {
+        this.errors.addElement(key, el);
     }
 }
 

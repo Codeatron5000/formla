@@ -1,6 +1,13 @@
-import {escapeRegExp, isArr} from "./utils";
+// @flow
+import {escapeRegExp, isArr, isNil} from "./utils";
+
+type ErrorValue = string | Array<string>;
+type ErrorValues = { [string]: ErrorValue };
 
 class Errors {
+
+    errors: ErrorValues;
+    elements: { [string]: Element };
     /**
      * Create a new Errors instance.
      */
@@ -9,41 +16,42 @@ class Errors {
         this.elements = {};
     }
 
-
     /**
      * Determine if an errors exists for the given field.
      *
      * @param {string|RegExp} field
      */
-    has(field) {
+    has(field: string | RegExp): boolean {
         if (field instanceof RegExp) {
             return Object.keys(this.errors).some(key => field.test(key));
         }
         return this.errors.hasOwnProperty(field);
     }
 
-
     /**
      * Determine if we have any errors.
      */
-    any() {
+    any(): boolean {
         return Object.keys(this.errors).length > 0;
     }
-
 
     /**
      * Retrieve the error message for a field.
      *
      * @param {string} field
      */
-    getFirst(field) {
+    getFirst(field: string): ?string {
         let error = this.get(field);
-        if (error && error.length) {
-            return error[0];
+        if (error) {
+            if (isArr(error)) {
+                return error.length ? error[0] : null;
+            } else {
+                return error || null;
+            }
         }
     }
 
-    get(field) {
+    get(field: string) {
         return this.errors[field];
     }
 
@@ -54,12 +62,11 @@ class Errors {
      * @param error
      * @param force
      */
-    add(field, error, force = false) {
+    add(field: string, error: ErrorValue, force: boolean = false) {
         if (!this.has(field) || force) {
             this.errors[field] = error;
         }
     }
-
 
     /**
      * Record the new errors.
@@ -67,7 +74,7 @@ class Errors {
      * @param {object} errors
      * @param timeout
      */
-    record(errors, timeout = 3000) {
+    record(errors: ErrorValues, timeout: number = 3000) {
         this.errors = errors;
         if (timeout) {
             window.setTimeout(() => {
@@ -76,13 +83,12 @@ class Errors {
         }
     }
 
-
     /**
      * Clear one or all error fields.
      *
      * @param {string|null} field
      */
-    clear(field = null) {
+    clear(field: ?string) {
         if (field) {
             delete this.errors[field];
 
@@ -92,16 +98,20 @@ class Errors {
         this.errors = {};
     }
 
-    addElement(key, el) {
+    addElement(key: string, el: Element) {
         this.elements[key] = el;
     }
 
-    scrollToFirst(options = null) {
-        options = options || { behavior: 'smooth', inline: 'center' };
+    scrollToFirst(options: ?boolean | {
+        behavior?: ('auto' | 'instant' | 'smooth'),
+        block?: ('start' | 'center' | 'end' | 'nearest'),
+        inline?: ('start' | 'center' | 'end' | 'nearest'),
+    } = null) {
+        options = isNil(options) ? { behavior: 'smooth', inline: 'center' } : options;
 
         for (let key in this.elements) {
-            let rx = escapeRegExp(key);
-            rx = new RegExp(rx.replace('*', '.*'));
+            let expression = escapeRegExp(key);
+            let rx = new RegExp(expression.replace('*', '.*'));
 
             if (Object.keys(this.errors).some(key => rx.test(key))) {
                 let el = this.elements[key];
