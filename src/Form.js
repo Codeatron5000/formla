@@ -21,7 +21,6 @@ type FormValue = ScalarFormValue | Array<?FormValue> | { [string]: ?FormValue };
 
 type Data = { [string]: FormValue };
 
-
 type Options = {
     method: ?Method,
     url: ?string,
@@ -34,6 +33,7 @@ type Options = {
     uploadLimit: ?number,
     responseType: string,
     validationStatusCode: number,
+    httpAdaptor: ({ method: Method, url: string }) => Promise<any>,
 }
 
 function parseOptions(method: Method | Options, url: ?(string | Options), options: ?Options): Options {
@@ -121,6 +121,7 @@ class Form {
         uploadLimit: null,
         responseType: 'json',
         validationStatusCode: 422,
+        httpAdaptor: http,
     };
 
     static setDefaultOptions = function (options: Options) {
@@ -272,21 +273,19 @@ class Form {
             data = JSON.stringify(data);
         }
 
-        let httpAdapter = this.options.httpAdapter || http;
+        let httpAdapter = this.options.httpAdapter;
 
         return httpAdapter({
             ...this.options,
-            headers: {
-                'Content-Type': hasFile && 'application/json',
-                ...this.options.headers,
-            },
             data,
-        }).then(() => {
+        }).then(response => {
             this.onSuccess();
+            return response;
         }).catch(error => {
             if (!this.options.quiet) {
                 this.onFail(error);
             }
+            return error;
         });
     }
 

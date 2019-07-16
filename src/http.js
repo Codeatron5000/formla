@@ -4,7 +4,6 @@ import type { Method } from './flow';
 type Options = {
     method: Method,
     url: string,
-    headers: { [string]: string },
 }
 
 type Response = {
@@ -38,12 +37,6 @@ export default function http(options: Options) {
             }
         };
     });
-
-    if (options.headers) {
-        for (let key in options.headers) {
-            xhr.setRequestHeader(key, options.headers[key]);
-        }
-    }
 
     xhr.open(options.method, options.url);
     xhr.send();
