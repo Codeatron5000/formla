@@ -2,6 +2,7 @@
 import {isFile, mixin, clone, hasOwn, emptyValue, isObj, isNil, isArr} from "./utils";
 import Errors from "./Errors";
 import http from "./http";
+import type { Method } from './flow';
 
 type ErrorResponse = {
     status: number,
@@ -20,7 +21,6 @@ type FormValue = ScalarFormValue | Array<?FormValue> | { [string]: ?FormValue };
 
 type Data = { [string]: FormValue };
 
-type Method = 'get' | 'post' | 'put' | 'patch' | 'head' | 'option' | 'delete';
 
 type Options = {
     method: ?Method,
