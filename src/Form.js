@@ -216,7 +216,7 @@ class Form {
         return this.options.clone ? clone(data) : data;
     }
 
-    addFileFromEvent(event: Event | DragEvent, key: string): Form {
+    addFileFromEvent(event: Event | DragEvent, key: ?string): Form {
         let node = event.target;
         if (!(node instanceof HTMLInputElement)) {
             throw new Error('Incompatible event target, must be of type HTMLInputElement');
