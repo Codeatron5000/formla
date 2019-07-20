@@ -98,8 +98,16 @@ class Errors {
         this.errors = {};
     }
 
-    addElement(key: string, el: Element) {
-        this.elements[key] = el;
+    addElement(key: string | RegExp | string[], el: Element) {
+        if (isArr(key)) {
+            key.forEach(field => this.addElement(field, el));
+        } else {
+            this.elements.push({ key, el });
+        }
+    }
+
+    hasElements(): boolean {
+        return !!this.elements.length;
     }
 
     scrollToFirst(options: ?boolean | {
@@ -110,8 +118,13 @@ class Errors {
         options = isNil(options) ? { behavior: 'smooth', inline: 'center' } : options;
 
         for (let key in this.elements) {
-            let expression = escapeRegExp(key);
-            let rx = new RegExp(expression.replace('*', '.*'));
+            let rx;
+            if (! key instanceof RegExp) {
+                let expression = escapeRegExp(key);
+                rx = new RegExp(expression.replace('*', '.*'));
+            } else {
+                rx = key;
+            }
 
             if (Object.keys(this.errors).some(key => rx.test(key))) {
                 let el = this.elements[key];

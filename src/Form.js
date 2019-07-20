@@ -114,7 +114,6 @@ class Form {
         url: null,
         clear: true,
         quiet: false,
-        scrollToFirstError: false,
         timeout: false,
         clone: true,
         autoRemoveError: true,
@@ -124,7 +123,7 @@ class Form {
         httpAdaptor: http,
     };
 
-    static setDefaultOptions = function (options: Options) {
+    static setOptions = function (options: Options) {
         Form.defaultOptions = mixin(Form.defaultOptions, options);
     };
 
@@ -302,12 +301,8 @@ class Form {
     onFail(error: ErrorResponse) {
         if (+error.status === this.options.validationStatusCode) {
             this.errors.record(error.response.errors, this.options.timeout);
-            let scrollToFirstError = this.options.scrollToFirstError;
-            if (scrollToFirstError) {
-                if (typeof scrollToFirstError !== 'object') {
-                    scrollToFirstError = { behavior: 'smooth', inline: 'center' }
-                }
-                this.errors.scrollToFirst(scrollToFirstError);
+            if (this.errors.hasElements()) {
+                this.errors.scrollToFirst();
             }
         }
     }
