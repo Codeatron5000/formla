@@ -78,7 +78,8 @@ document.querySelector('input[name="file"]')
 By default the file will use the name of the input field to find the key, however you can override this by passing the key as the second argument.
 
 ### Submitting the form
-The `submit` method accepts 3 arguments. The request method, the url, and some optional options. Alternatively you could just pass the options as the first argument, so long as the options includes the method and the url.
+The `submit` method accepts 3 arguments. The request method, the url, and some optional configuration.
+Alternatively you could just pass the options as the first argument, so long as the options includes the method and the url.
 
 ```js
 form.submit('post', 'https://api.com');

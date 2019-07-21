@@ -1,45 +1,34 @@
 // @flow
 import type { Method } from './flow';
+import type { Data } from "./Form";
 
 type Options = {
     method: Method,
     url: string,
 }
 
-type Response = {
-    status: number,
-    response: any,
-    responseText: string,
-    responseJson: any,
-    xhr: XMLHttpRequest,
-}
-
-function generateResponse(xhr) {
-    return {
-        status: xhr.status,
-        response: xhr.response,
-        responseText: xhr.responseText,
-        responseJson: JSON.parse(xhr.responseText),
-        xhr,
-    }
-}
-
-export default function http(options: Options) {
+export default function http(method: Method, url: string, data: FormData | Data) {
     let xhr = new XMLHttpRequest();
 
-    let response = new Promise<Response>((resolve, reject) => {
-        xhr.onload = function () {
-            const response = generateResponse(xhr);
+    let response = new Promise<XMLHttpRequest>((resolve, reject) => {
+        xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
-                resolve(response);
+                resolve(xhr);
             } else {
-                reject(response);
+                reject(xhr);
             }
         };
+        xhr.onerror = () => reject(xhr);
     });
 
-    xhr.open(options.method, options.url);
-    xhr.send();
+    xhr.open(method, url);
+    if (data instanceof FormData) {
+        xhr.setRequestHeader('Content-Type', 'multipart/form-data');
+        xhr.send(data);
+    } else {
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify(data));
+    }
 
     return response;
 }

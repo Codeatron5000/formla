@@ -6,7 +6,7 @@ export function hasOwn (obj: Object, key: string): boolean %checks {
 }
 
 export function isFile(val: mixed): boolean %checks {
-    return !!val && (val instanceof File || val instanceof Blob);
+    return !!val && (val instanceof Blob);
 }
 
 export function fileTooBig(val: mixed, maxSize: number): boolean {
@@ -62,4 +62,30 @@ export function isFunc(value: mixed): %checks {
 
 export function escapeRegExp(string: string) {
     return string.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+}
+
+type NestedObject = {
+    [string]: NestedObject | mixed
+}
+export function containsFile(obj: NestedObject | Array<NestedObject | mixed>): boolean {
+    if (isArr(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+            if (obj[i] instanceof File) {
+                return true;
+            }
+            if (isObj(obj[i])) {
+                return containsFile(obj[i]);
+            }
+        }
+    } else {
+        for (let key in obj) {
+            if (obj[key] instanceof File) {
+                return true;
+            }
+            if (isObj(obj[key])) {
+                return containsFile(obj[key]);
+            }
+        }
+    }
+    return false;
 }
