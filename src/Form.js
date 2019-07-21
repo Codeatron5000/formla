@@ -3,6 +3,7 @@ import {isFile, mixin, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsF
 import Errors from "./Errors";
 import http from "./http";
 import type { Method } from './flow';
+import type { ErrorValues } from "./Errors";
 
 type ErrorResponse = {
     status: number,
@@ -29,8 +30,8 @@ type Options = {
     useJson: boolean,
     strictMode: boolean,
     isValidationError: ({ status: number }) => boolean,
-    formatErrorResponse: (XMLHttpRequest | { data: string | { errors: mixed} }) => mixed,
-    timeout: boolean,
+    formatErrorResponse: (any) => ErrorValues,
+    timeout: false | number,
     autoRemoveError: boolean,
     clear: boolean,
     quiet: boolean,
@@ -49,7 +50,7 @@ function parseOptions(method: Method | Options, url: ?(string | Options), option
     }
     return {
         method,
-        url,
+        url: url || '',
         ...options,
     };
 }
@@ -150,7 +151,8 @@ class Form {
             if (!data.errors) {
                 throw new Error('Unable to find errors in the response');
             }
-            return data.errors;
+            let errors: ErrorValues = data.errors;
+            return errors;
         },
 
         // The number of milliseconds to wait before clearing the error messages.
@@ -311,10 +313,10 @@ class Form {
     }
 
     submit(method: Method | Options, url: ?string | Options, options: ?Options): Promise<any> {
-        this.setOptions(parseOptions(method, url, options));
+        const requestOptions = mixin(this.options || Form.defaultOptions, options || {});
 
-        let formData, hasFile = this.hasFile(), data = this.getData();
-        if (this.shouldConvertToFormData()) {
+        let formData, data = this.getData();
+        if (this.shouldConvertToFormData(requestOptions)) {
             formData = new FormData();
 
             let params = flattenToQueryParams(data);
@@ -326,24 +328,25 @@ class Form {
             data = formData;
         }
 
-        let httpAdapter = this.options.sendWith;
+        let httpAdapter = requestOptions.sendWith;
 
-        return httpAdapter(method, url, data).then(response => {
-            this.onSuccess();
+        return httpAdapter(requestOptions.method, this.buildBaseUrl(requestOptions), data).then(response => {
+            this.onSuccess(requestOptions);
             return response;
         }).catch(error => {
-            if (!this.options.quiet) {
-                this.onFail(error);
+            if (!requestOptions.quiet) {
+                this.onFail(error, requestOptions);
             }
             return error;
         });
     }
 
-    shouldConvertToFormData() {
-        if (!this.options.useJson) {
+    shouldConvertToFormData(options: ?Options) {
+        options = options || this.options;
+        if (!options.useJson) {
             return true;
         }
-        if (this.hasFile() && this.options.strictMode) {
+        if (this.hasFile() && options.strictMode) {
             throw new Error('Cannot convert a file to JSON');
         }
         return this.hasFile();
@@ -353,24 +356,40 @@ class Form {
         return containsFile(this.getData());
     }
 
-    onSuccess() {
-        if (this.options.clear) {
+    onSuccess(options: ?Options) {
+        options = options || this.options;
+        if (options.clear) {
             this.reset();
         }
     }
 
-    onFail(error: ErrorResponse) {
-        if (this.options.isValidationError(error)) {
-            let errors = this.options.formatErrorResponse(error);
-            this.errors.record(errors, this.options.timeout);
+    onFail(error: XMLHttpRequest, options: ?Options) {
+        options = options || this.options;
+        if (options.isValidationError(error)) {
+            let errors = options.formatErrorResponse(error);
+            this.errors.record(errors, options.timeout);
             if (this.errors.hasElements()) {
                 this.errors.scrollToFirst();
             }
         }
     }
 
-    makeUrl(url: ?string): string {
-        url = url || this.options.url;
+    buildBaseUrl(options: ?Options) {
+        options = options || this.options;
+        if (options.url.includes('://')) {
+            return options.url;
+        }
+        let baseUrl = options.baseUrl;
+        let relativeUrl = options.url;
+
+        baseUrl = baseUrl.replace(/\/+$/g, '');
+        relativeUrl = relativeUrl.replace(/^\/+/g, '');
+
+        return `${baseUrl}/${relativeUrl}`;
+    }
+
+    makeUrl(options: ?Options): string {
+        let url = this.buildBaseUrl(options);
         let queryStart = url.includes('?') ? '&' : '?';
         let fullUrl = url + queryStart;
         let properties = [];

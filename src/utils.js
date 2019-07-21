@@ -64,10 +64,7 @@ export function escapeRegExp(string: string) {
     return string.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
 }
 
-type NestedObject = {
-    [string]: NestedObject | mixed
-}
-export function containsFile(obj: NestedObject | Array<NestedObject | mixed>): boolean {
+export function containsFile(obj: any): boolean {
     if (isArr(obj)) {
         for (let i = 0; i < obj.length; i++) {
             if (obj[i] instanceof File) {

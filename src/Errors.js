@@ -2,18 +2,18 @@
 import {escapeRegExp, isArr, isNil} from "./utils";
 
 type ErrorValue = string | Array<string>;
-type ErrorValues = { [string]: ErrorValue };
+export type ErrorValues = { [string]: ErrorValue };
 
 class Errors {
 
     errors: ErrorValues;
-    elements: { [string]: Element };
+    elements: Array<{ key: string | RegExp, el: Element }>;
     /**
      * Create a new Errors instance.
      */
     constructor() {
         this.errors = {};
-        this.elements = {};
+        this.elements = [];
     }
 
     /**
@@ -74,7 +74,7 @@ class Errors {
      * @param {object} errors
      * @param timeout
      */
-    record(errors: ErrorValues, timeout: number = 3000) {
+    record(errors: ErrorValues, timeout: ?(false | number) = 3000) {
         this.errors = errors;
         if (timeout) {
             window.setTimeout(() => {
@@ -117,20 +117,22 @@ class Errors {
     } = null) {
         options = isNil(options) ? { behavior: 'smooth', inline: 'center' } : options;
 
-        for (let key in this.elements) {
-            let rx;
-            if (! key instanceof RegExp) {
+        const element = this.elements.find(({ key, el }) => {
+            let rx: RegExp;
+            if (key instanceof RegExp) {
+                rx = key;
+            } else {
                 let expression = escapeRegExp(key);
                 rx = new RegExp(expression.replace('*', '.*'));
-            } else {
-                rx = key;
             }
 
             if (Object.keys(this.errors).some(key => rx.test(key))) {
-                let el = this.elements[key];
-                el.scrollIntoView(options);
-                break;
+                return true;
             }
+        });
+
+        if (element) {
+            element.el.scrollIntoView(options);
         }
     }
 }
