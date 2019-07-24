@@ -1,5 +1,5 @@
 // @flow
-import {isFile, mixin, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsFile} from "./utils";
+import {isFile, mixin, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsFile, isStr} from "./utils";
 import Errors from "./Errors";
 import http from "./http";
 import type { Method } from './flow';
@@ -103,6 +103,25 @@ function formValueToString(value: PrimitiveFormValue): string {
     return value || '';
 }
 
+function bubbleError(error: Error | Object): Promise<Object> {
+    if (error instanceof Error) {
+        throw error;
+    }
+    return Promise.reject(error);
+}
+
+function isValidErrorObject(errors) {
+    return !errors ||
+        typeof errors !== 'object' ||
+        !Object.keys(errors).length ||
+        Object.values(errors).some(error => {
+            if (isArr(error)) {
+                return error.some(message => !isStr(message));
+            }
+            return !isStr(error);
+        });
+}
+
 class Form {
 
     errors: Errors;
@@ -148,10 +167,10 @@ class Form {
                     throw new Error('Unable to find errors in the response');
                 }
             }
-            if (!data.errors) {
+            let errors: ErrorValues = data.errors;
+            if (isValidErrorObject(errors)) {
                 throw new Error('Unable to find errors in the response');
             }
-            let errors: ErrorValues = data.errors;
             return errors;
         },
 
@@ -313,7 +332,7 @@ class Form {
     }
 
     submit(method: Method | Options, url: ?string | Options, options: ?Options): Promise<any> {
-        const requestOptions = mixin(this.options || Form.defaultOptions, options || {});
+        const requestOptions = mixin(this.options || Form.defaultOptions, parseOptions(method, url, options || {}));
 
         let formData, data = this.getData();
         if (this.shouldConvertToFormData(requestOptions)) {
@@ -331,13 +350,17 @@ class Form {
         let httpAdapter = requestOptions.sendWith;
 
         return httpAdapter(requestOptions.method, this.buildBaseUrl(requestOptions), data).then(response => {
-            this.onSuccess(requestOptions);
+            if (requestOptions.isValidationError(response)) {
+                this.onFail(response, requestOptions);
+            } else {
+                this.onSuccess(requestOptions);
+            }
             return response;
         }).catch(error => {
-            if (!requestOptions.quiet) {
+            if (requestOptions.isValidationError(error)) {
                 this.onFail(error, requestOptions);
             }
-            return error;
+            return bubbleError(error);
         });
     }
 
@@ -365,7 +388,7 @@ class Form {
 
     onFail(error: XMLHttpRequest, options: ?Options) {
         options = options || this.options;
-        if (options.isValidationError(error)) {
+        if (!options.quiet) {
             let errors = options.formatErrorResponse(error);
             this.errors.record(errors, options.timeout);
             if (this.errors.hasElements()) {

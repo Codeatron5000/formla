@@ -60,6 +60,10 @@ export function isFunc(value: mixed): %checks {
     return value instanceof Function;
 }
 
+export function isStr(value: mixed): %checks {
+    return typeof value === 'string';
+}
+
 export function escapeRegExp(string: string) {
     return string.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
 }

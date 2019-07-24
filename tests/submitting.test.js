@@ -67,7 +67,7 @@ test('Submitting with a custom callback', () => {
         }
     });
 
-    form.post('https://api.com');
+    form.post('https://api.com').catch();
 });
 
 test('Submitting json data', () => {

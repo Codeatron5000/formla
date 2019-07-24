@@ -8,6 +8,7 @@ class Errors {
 
     errors: ErrorValues;
     elements: Array<{ key: string | RegExp, el: Element }>;
+
     /**
      * Create a new Errors instance.
      */
