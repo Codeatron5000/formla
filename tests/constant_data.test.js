@@ -40,3 +40,29 @@ test('Attempting to modify constant data', () => {
 
     expect(form.getData()).toEqual({ name: 'Bob' });
 });
+
+test('Cloning constant data', () => {
+    const form = new Form({});
+
+    const email = { label: 'private', address: 'test@mail.com' };
+    form.constantData('email', email);
+
+    email.label = 'work';
+
+    expect(form.getData()).toEqual({
+        email: { label: 'private', address: 'test@mail.com' }
+    });
+});
+
+test('Disabling cloning constant data', () => {
+    const form = new Form({}, { clone: false });
+
+    const email = { label: 'private', address: 'test@mail.com' };
+    form.constantData('email', email);
+
+    email.label = 'work';
+
+    expect(form.getData()).toEqual({
+        email: { label: 'work', address: 'test@mail.com' }
+    });
+});

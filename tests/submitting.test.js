@@ -13,6 +13,7 @@ beforeEach(() => {
                 { tile: 'second test post' }
             ]
         ),
+        status: 200,
         setRequestHeader: jest.fn(),
     };
 
@@ -52,6 +53,15 @@ test('Submitting with different methods', () => {
     expect(mockXHR.open).toBeCalledWith('patch', 'https://api.com');
     form.delete('https://api.com');
     expect(mockXHR.open).toBeCalledWith('delete', 'https://api.com');
+});
+
+test('Submitting with different methods overrides request options', () => {
+    const form = new Form({
+        name: 'Bob',
+    });
+
+    form.get('https://api.com', { method: 'post' });
+    expect(mockXHR.open).toBeCalledWith('get', 'https://api.com');
 });
 
 test('Submitting with a custom callback', () => {
@@ -120,4 +130,58 @@ test('Submitting a file with useJson in strict mode throws an error', () => {
     };
 
     expect(t).toThrow(Error);
+});
+
+test('Submitting a request with a base url', () => {
+    const form = new Form({
+        name: 'Bob',
+    }, {
+        baseUrl: 'https://api.com',
+    });
+
+    form.submit('post', 'posts');
+    expect(mockXHR.open).toBeCalledWith('post', 'https://api.com/posts');
+});
+
+test('Submitting a request with a base url trims excess slashes', () => {
+    const form = new Form({
+        name: 'Bob',
+    }, {
+        baseUrl: 'https://api.com/',
+    });
+
+    form.submit('post', '/posts');
+    expect(mockXHR.open).toBeCalledWith('post', 'https://api.com/posts');
+});
+
+test('Fields are reverted to their original value after a successful request', (done) => {
+    const form = new Form({
+        name: 'Bob',
+    });
+
+    form.name = 'Bill';
+
+    form.submit('post', '/posts').then(() => {
+        expect(form.name).toBe('Bob');
+        done();
+    });
+
+    mockXHR.onload();
+});
+
+test('Disabling field clearance after a successful request', (done) => {
+    const form = new Form({
+        name: 'Bob',
+    }, {
+        clear: false,
+    });
+
+    form.name = 'Bill';
+
+    form.submit('post', '/posts').then(() => {
+        expect(form.name).toBe('Bill');
+        done();
+    });
+
+    mockXHR.onload();
 });

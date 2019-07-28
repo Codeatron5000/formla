@@ -13,16 +13,6 @@ export function fileTooBig(val: mixed, maxSize: number): boolean {
     return isFile(val) && val.size >= (maxSize * 1024 * 1024);
 }
 
-export function mixin(source: Object, target: Object): Object {
-    let mix = {};
-
-    for (const key in source) {
-        mix[key] = hasOwn(target, key) ? target[key] : source[key]
-    }
-
-    return mix;
-}
-
 export function clone(obj: any): any {
     return JSON.parse(JSON.stringify(obj));
 }

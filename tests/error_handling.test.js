@@ -121,6 +121,23 @@ test('The response can be modified to the correct response', (done) => {
     Promise.all([wrongErrorRequest, rightErrorRequest]).then(() => done());
 });
 
+test('The form errors can be silenced in options', (done) => {
+    const form = new Form({
+        username: 'Bob',
+        password: 'Passw0rd!',
+    }, {
+        quiet: true,
+    });
+
+    form.submit('post', 'https://api.com')
+        .catch(() => {
+            expect(form.errors.any()).toBe(false);
+            done();
+        });
+
+    mockXHR.onload();
+});
+
 test('Checking if the form has a certain error', (done) => {
     const form = new Form({
         username: 'Bob',

@@ -1,5 +1,5 @@
 // @flow
-import {isFile, mixin, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsFile, isStr} from "./utils";
+import {isFile, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsFile, isStr} from "./utils";
 import Errors from "./Errors";
 import http from "./http";
 import type { Method } from './flow';
@@ -38,21 +38,18 @@ type Options = {
     clone: boolean,
 }
 
-function parseOptions(method: Method | Options, url: ?(string | Options), options: ?Options): Options {
-    if (isObj(method)) {
-        return method;
-    }
-    if (url && isObj(url)) {
-        return {
-            method,
-            ...url,
-        };
-    }
+type PartialOptions = $Shape<Options>;
+
+function parseOptions(method: ?(Method | PartialOptions), url: ?(string | PartialOptions), options: ?PartialOptions): PartialOptions {
+    method = method ? (isObj(method) ? method : { method }) : {};
+    url = url ? (isObj(url) ? url : { url }) : {};
+    options = options || {};
+
     return {
-        method,
-        url: url || '',
         ...options,
-    };
+        ...url,
+        ...method,
+    }
 }
 
 function flattenToQueryParams(data: Data | Array<FormValue>, prefix: string = ''): { [string]: string | Blob | File } {
@@ -192,7 +189,10 @@ class Form {
     };
 
     static setOptions = function (options: Options) {
-        Form.defaultOptions = mixin(Form.defaultOptions, options);
+        Form.defaultOptions = {
+            ...Form.defaultOptions,
+            ...options
+        };
     };
 
     constructor(data: Data, options: ?Options) {
@@ -209,7 +209,12 @@ class Form {
 
     setOptions(options: ?Options) {
         this.options = this.options || Form.defaultOptions;
-        this.options = mixin(this.options, options || {});
+        if (options) {
+            this.options = {
+                ...this.options,
+                ...options,
+            }
+        }
     }
 
     append(key: string | Data, value: FormValue, constant: ?boolean = false): Form {
@@ -220,23 +225,15 @@ class Form {
             return this;
         }
 
+        value = this.parseData(value);
         if (constant) {
             this.originalConstantData[key] = value;
         } else {
             this.originalData[key] = value;
         }
         if (!constant) {
-            this.data[key] = this.parseData(value);
-            Object.defineProperty(
-                this,
-                key,
-                {
-                    get: () => this.data[key],
-                    set: (newValue: FormValue) => {
-                        this.setData(key, newValue);
-                    }
-                }
-            );
+            this.data[key] = value;
+            this.defineProperty(key, value);
         } else {
             Object.defineProperty(
                 this,
@@ -251,6 +248,19 @@ class Form {
         }
 
         return this;
+    }
+
+    defineProperty(key: string, value: FormValue) {
+        Object.defineProperty(
+            this,
+            key,
+            {
+                get: () => this.data[key],
+                set: (newValue: FormValue) => {
+                    this.setData(key, newValue);
+                }
+            }
+        );
     }
 
     constantData(key: string | Data, value: FormValue): Form {
@@ -332,7 +342,11 @@ class Form {
     }
 
     submit(method: Method | Options, url: ?string | Options, options: ?Options): Promise<any> {
-        const requestOptions = mixin(this.options || Form.defaultOptions, parseOptions(method, url, options || {}));
+        options = parseOptions(method, url, options);
+        const requestOptions = {
+            ...this.options,
+            ...options,
+        };
 
         let formData, data = this.getData();
         if (this.shouldConvertToFormData(requestOptions)) {

@@ -267,6 +267,7 @@ Form.setOptions({
     quiet: false,
 
     // If clone is set to false any nested objects and arrays will be stored in the form by reference.
+    // This means the form cannot watch for changes on nested objects and won't remove errors for nested fields.
     clone: true,
 });
 ```
