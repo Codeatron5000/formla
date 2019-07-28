@@ -4,12 +4,12 @@ An easy to use, highly configurable, object oriented ajax form package.
 ## Installation
 Using npm:
 ```
-npm install formax --save
+npm install formla --save
 ```
 
 Using yarn:
 ```
-yarn add formax --save
+yarn add formla --save
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ To use the form, first import it into your project and instantiate a new instanc
 values.
 
 ```js
-import Form from 'formax';
+import Form from 'formla';
 
 const form = new Form({
   username: '',
@@ -222,7 +222,7 @@ The form class has many options for customising the plugin to your needs.
 
 You can set the options globally using the `setOptions` static method:
 ```js
-import Form from 'formax';
+import Form from 'formla';
 
 Form.setOptions({
     baseUrl: 'https://api.com',

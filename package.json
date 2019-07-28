@@ -1,5 +1,5 @@
 {
-  "name": "formax",
+  "name": "formla",
   "version": "1.0.0",
   "description": "A form object that makes sending ajax forms a breeze",
   "main": "lib/Form.js",
