@@ -9,10 +9,6 @@ export function isFile(val: mixed): boolean %checks {
     return !!val && (val instanceof Blob);
 }
 
-export function fileTooBig(val: mixed, maxSize: number): boolean {
-    return isFile(val) && val.size >= (maxSize * 1024 * 1024);
-}
-
 export function clone(obj: any): any {
     return JSON.parse(JSON.stringify(obj));
 }
@@ -28,10 +24,6 @@ export function emptyValue(original: mixed): Array<any> | {} | '' | null {
         return '';
     }
     return null;
-}
-
-export function isUndef(value: mixed): %checks {
-    return typeof value === 'undefined';
 }
 
 export function isObj(value: mixed): boolean %checks {

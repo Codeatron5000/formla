@@ -233,7 +233,7 @@ class Form {
         }
         if (!constant) {
             this.data[key] = value;
-            this.defineProperty(key, value);
+            this.defineProperty(key);
         } else {
             Object.defineProperty(
                 this,
@@ -250,7 +250,7 @@ class Form {
         return this;
     }
 
-    defineProperty(key: string, value: FormValue) {
+    defineProperty(key: string) {
         Object.defineProperty(
             this,
             key,

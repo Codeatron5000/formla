@@ -4,7 +4,7 @@
   "description": "A form object that makes sending ajax forms a breeze",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel src/ -d lib/",
+    "build": "node_modules/.bin/flow check && node_modules/.bin/babel src/Form.js -d lib/",
     "prepublish": "yarn run build",
     "test": "jest"
   },
@@ -17,14 +17,21 @@
   "author": "Codatron5000",
   "license": "ISC",
   "devDependencies": {
+    "@babel/cli": "^7.5.5",
     "@babel/core": "^7.5.4",
     "@babel/plugin-proposal-class-properties": "^7.5.0",
     "@babel/preset-env": "^7.5.4",
     "@babel/preset-flow": "^7.0.0",
-    "babel-cli": "^6.26.0",
     "babel-jest": "^24.8.0",
-    "babel-preset-flow": "^6.23.0",
     "flow-bin": "^0.100.0",
     "jest": "^24.8.0"
+  },
+  "babel": {
+    "plugins": [
+      "@babel/plugin-proposal-class-properties"
+    ],
+    "presets": [
+      "@babel/preset-flow"
+    ]
   }
 }
