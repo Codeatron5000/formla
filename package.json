@@ -2,7 +2,7 @@
   "name": "ajax-form",
   "version": "1.0.0",
   "description": "A form object that makes sending ajax forms a breeze",
-  "main": "lib/index.js",
+  "main": "lib/Form.js",
   "scripts": {
     "build": "node_modules/.bin/flow check && node_modules/.bin/babel src/Form.js -d lib/",
     "prepublish": "yarn run build",
