@@ -1,22 +1,23 @@
-# Ajax Form
+# Formax
+An easy to use, highly configurable, object oriented ajax form package.
 
 ## Installation
 Using npm:
 ```
-npm install ajax-form --save
+npm install formax --save
 ```
 
 Using yarn:
 ```
-yarn add ajax-form --save
+yarn add formax --save
 ```
 
 ## Usage
-To use the form first import it into your project and instantiate a new instance with the form fields and initial
+To use the form, first import it into your project and instantiate a new instance with the form fields and initial
 values.
 
 ```js
-import Form from 'ajax-form';
+import Form from 'formax';
 
 const form = new Form({
   username: '',
@@ -221,7 +222,7 @@ The form class has many options for customising the plugin to your needs.
 
 You can set the options globally using the `setOptions` static method:
 ```js
-import Form from 'ajax-form';
+import Form from 'formax';
 
 Form.setOptions({
     baseUrl: 'https://api.com',
