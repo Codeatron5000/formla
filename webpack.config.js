@@ -11,6 +11,7 @@ function generateConfig(name) {
             filename: name + '.js',
             sourceMapFilename: name + '.map',
             library: 'formla',
+            libraryTarget: 'umd',
         },
         node: {
             process: false
