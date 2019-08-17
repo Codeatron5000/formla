@@ -1,4 +1,4 @@
-# Formax
+# Formla
 An easy to use, highly configurable, object oriented ajax form package.
 
 ## Installation
