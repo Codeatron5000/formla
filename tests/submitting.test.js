@@ -185,3 +185,20 @@ test('Disabling field clearance after a successful request', (done) => {
 
     mockXHR.onload();
 });
+
+test('Data can be modified before a request is sent', () => {
+    const form = new Form({
+        name: 'Bob',
+    }, {
+        formatData(data) {
+            data.name = data.name.toUpperCase();
+            return data;
+        }
+    });
+
+    form.submit('post', 'https://api.com');
+
+    const submittedData = mockXHR.send.mock.calls[0][0];
+
+    expect(submittedData.get('name')).toBe('BOB');
+});

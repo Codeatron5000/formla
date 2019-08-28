@@ -1,18 +1,10 @@
 // @flow
-import {isFile, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsFile, isStr} from "./utils";
+import { extractFiles } from 'extract-files';
+import {isFile, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsFile, isStr, arrayToObject} from "./utils";
 import Errors from "./Errors";
 import http from "./http";
 import type { Method } from './flow';
 import type { ErrorValues } from "./Errors";
-
-type ErrorResponse = {
-    status: number,
-    response: {
-        errors: {
-            [string]: Array<string> | string
-        }
-    }
-}
 
 type PrimitiveFormValue = string | number | boolean | null | typeof undefined;
 
@@ -26,10 +18,12 @@ type Options = {
     method: Method,
     baseUrl: string,
     url: string,
+    graphql: string,
     sendWith: (method: Method, url: string, data: FormData | Data) => Promise<any>,
     useJson: boolean,
     strictMode: boolean,
     isValidationError: ({ status: number }) => boolean,
+    formatData: (Data) => Data,
     formatErrorResponse: (any) => ErrorValues,
     timeout: false | number,
     autoRemoveError: boolean,
@@ -138,6 +132,9 @@ class Form {
         // The url to submit the form
         url: '',
 
+        // The endpoint to use for all graphql queries
+        graphql: 'graphql',
+
         // A callback to implement custom HTTP logic.
         // It is recommended to use this option so the form can utilise your HTTP library.
         // The callback should return a promise that the form can use to handle the response.
@@ -153,6 +150,9 @@ class Form {
 
         // The status code for which the form should handle validation errors.
         isValidationError: ({ status }) => status === 422,
+
+        // A callback to format the data before sending it.
+        formatData: (data) => data,
 
         // A callback that should turn the error response into an object of field names and their validation errors.
         formatErrorResponse: (response) => {
@@ -341,6 +341,35 @@ class Form {
         return this.submit('get', url, options);
     }
 
+    graphql(query: string, options: ?Options): Promise<any> {
+        options = options || {};
+        const originalFormatDataCallback = options.formatData;
+
+        options.url = options.graphql || this.options.graphql;
+
+        options.useJson = !this.hasFile();
+
+        options.formatData = (data) => {
+            data = originalFormatDataCallback ? originalFormatDataCallback(data) : data;
+            const operations = {
+                query,
+                variables: data,
+            };
+
+            if (!this.hasFile()) {
+                return operations;
+            }
+            const { clone, files } = extractFiles(data);
+            operations.variables = clone;
+            return {
+                operations: JSON.stringify(operations),
+                map: JSON.stringify(arrayToObject(Array.from(files.values()))),
+                ...arrayToObject(Array.from(files.keys())),
+            };
+        };
+        return this.post(options);
+    }
+
     submit(method: Method | Options, url: ?string | Options, options: ?Options): Promise<any> {
         options = parseOptions(method, url, options);
         const requestOptions = {
@@ -348,7 +377,7 @@ class Form {
             ...options,
         };
 
-        let formData, data = this.getData();
+        let formData, data = requestOptions.formatData(this.getData());
         if (this.shouldConvertToFormData(requestOptions)) {
             formData = new FormData();
 

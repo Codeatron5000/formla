@@ -37,5 +37,8 @@
     "presets": [
       "@babel/preset-flow"
     ]
+  },
+  "dependencies": {
+    "extract-files": "^5.0.1"
   }
 }

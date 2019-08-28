@@ -72,3 +72,13 @@ export function containsFile(obj: any): boolean {
     }
     return false;
 }
+
+export function arrayToObject(array: any[]): { [string]: any } {
+    let target = {};
+
+    array.forEach((item, index) => {
+        target[index] = item;
+    });
+
+    return target;
+}

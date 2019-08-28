@@ -131,6 +131,64 @@ object by setting the `useJson` option to `true`.
 >them as the second argument to the constructor, or on a per request basis by passing them as the last parameter of the
 >request method.
 
+### GraphQL
+The form class has a `graphql` method that allows you to submit the data as a GraphQL request.
+
+The method accepts a query string and an optional second argument of options.
+
+The data held by the form will be submitted in the `variables` key of the request data.
+
+```js
+// Here is an example of how to submit the mutation described in the GraphQL
+// docs: https://graphql.org/learn/queries/#mutation
+const form = new Form({
+    ep: 'JEDI',
+    review: {
+        stars: 5,
+        commentary: 'This is a great movie!',
+    },
+});
+
+form.graphql(`
+    mutation CreateReviewForEpisode($ep: Episode!, $review: ReviewInput!) {
+        createReview(episode: $ep, review: $review) {
+            stars
+            commentary
+        }
+    }
+`);
+```
+
+You can use the `formatData` option to manipulate the data before it is sent. This is great for dealing with input
+types and some of the variables are constant.
+
+```js
+const form = new Form({
+    stars: 5,
+    commentary: 'This is a great movie!',
+}, {
+    formatData(data) {
+        return {
+            ep: 'JEDI',
+            review: data,
+        }
+    }
+});
+
+form.graphql(`
+    mutation CreateReviewForEpisode($ep: Episode!, $review: ReviewInput!) {
+        createReview(episode: $ep, review: $review) {
+            stars
+            commentary
+        }
+    }
+`);
+```
+
+#### File uploads
+Files are extracted from GraphQL requests according to the multipart request specs:
+https://github.com/jaydenseric/graphql-multipart-request-spec#multipart-form-field-structure
+
 ### Handling validation errors
 An important feature of the form is handling validation errors.
 
@@ -262,6 +320,10 @@ Form.setOptions({
 
     // The url to submit the form
     url: '',
+    
+    // The url of the GraphQL endpoint which will be used by all GraphQL
+    // requests.
+    graphql: 'graphql',
 
     // A callback to implement custom HTTP logic.
     // It is recommended to use this option so the form can utilise your HTTP
@@ -283,6 +345,9 @@ Form.setOptions({
 
     // The status code for which the form should handle validation errors.
     validationStatusCode: 422,
+    
+    // A callback to format the data before sending it.
+    formatData: (data) => data,
 
     // A callback that should turn the error response into an object of field
     // names and their validation errors.
