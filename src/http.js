@@ -7,7 +7,7 @@ type Options = {
     url: string,
 }
 
-export default function http(method: Method, url: string, data: FormData | Data) {
+export default function http(method: Method, url: string, data: FormData | Data, options: Options) {
     let xhr = new XMLHttpRequest();
 
     let response = new Promise<XMLHttpRequest>((resolve, reject) => {

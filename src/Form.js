@@ -19,7 +19,7 @@ type Options = {
     baseUrl: string,
     url: string,
     graphql: string,
-    sendWith: (method: Method, url: string, data: FormData | Data) => Promise<any>,
+    sendWith: (method: Method, url: string, data: FormData | Data, options: Options) => Promise<any>,
     useJson: boolean,
     strictMode: boolean,
     isValidationError: ({ status: number }) => boolean,
@@ -392,7 +392,7 @@ class Form {
 
         let httpAdapter = requestOptions.sendWith;
 
-        return httpAdapter(requestOptions.method, this.buildBaseUrl(requestOptions), data).then(response => {
+        return httpAdapter(requestOptions.method, this.buildBaseUrl(requestOptions), data, requestOptions).then(response => {
             if (requestOptions.isValidationError(response)) {
                 this.onFail(response, requestOptions);
             } else {
