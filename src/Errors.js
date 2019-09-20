@@ -107,6 +107,18 @@ class Errors {
         }
     }
 
+    removeElement(element: Element) {
+        this.elements = this.elements.filter(({ el }) => el !== element);
+    }
+
+    removeElementKey(field: string | RegExp | string[]) {
+        if (isArr(field)) {
+            field.forEach(key => this.removeElementKey(key));
+        } else {
+            this.elements = this.elements.filter(({ key }) => key !== field);
+        }
+    }
+
     hasElements(): boolean {
         return !!this.elements.length;
     }

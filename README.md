@@ -206,13 +206,14 @@ By default the form will check for a 422 status code and a json response of the 
       "The username was too long"
     ],
     "password": [
-      "The password is required",
+      "The password is required"
     ]
   }
 }
 ```
 
-You can change the status code it should look for with the `validationStatusCode` option.
+You can change the logic for discerning validation errors by overriding the
+`isValidationError` callback in the config.
 
 If you're server doesn't return validation errors in this format, you can pass a callback to the `formatErrorResponse`
 option which should return an object of the form data keys with their corresponding error messages as a string or an
@@ -344,7 +345,7 @@ Form.setOptions({
     strictMode: false,
 
     // The status code for which the form should handle validation errors.
-    validationStatusCode: 422,
+    isValidationError: ({ status }) => status === 422,
     
     // A callback to format the data before sending it.
     formatData: (data) => data,
