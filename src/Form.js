@@ -478,6 +478,14 @@ class Form {
     addElement(key: string, el: HTMLElement) {
         this.errors.addElement(key, el);
     }
+
+    removeElement(el: HTMLElement) {
+        this.errors.removeElement(el);
+    }
+
+    removeElementKey(key: string) {
+        this.errors.removeElementKey(key);
+    }
 }
 
 
