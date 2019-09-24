@@ -1,6 +1,6 @@
 {
   "name": "formla",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A form object that makes sending ajax forms a breeze",
   "main": "lib/Form.js",
   "scripts": {
@@ -40,6 +40,7 @@
     ]
   },
   "dependencies": {
-    "extract-files": "^5.0.1"
+    "extract-files": "^5.0.1",
+    "object-observer": "^2.3.0"
   }
 }
