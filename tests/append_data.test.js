@@ -39,3 +39,16 @@ test('Cloning appended data', () => {
     expect(form.email.label).toBe('work');
     expect(email.label).toBe('private');
 });
+
+test('Disabling cloning appended data', () => {
+    const form = new Form({}, { clone: false });
+
+    const email = { label: 'private', address: 'test@mail.com' };
+
+    form.append('email', email);
+
+    form.email.label = 'work';
+
+    expect(form.email.label).toBe('work');
+    expect(email.label).toBe('work');
+});
