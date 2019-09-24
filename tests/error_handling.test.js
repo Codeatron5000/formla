@@ -14,6 +14,8 @@ beforeEach(() => {
                     'The password cannot be less than 6 characters',
                     'The password must contain letters and numbers',
                 ],
+                'name.first': 'Wrong first name',
+                'name.last': 'Wrong last name',
             }
         }),
         status: 422,
@@ -243,6 +245,27 @@ test('Clearing errors when a field is updated', (done) => {
             form.username = 'Bill';
             expect(form.errors.has('username')).toBe(false);
             expect(form.errors.has('password')).toBe(true);
+            done();
+        });
+
+    mockXHR.onload();
+});
+
+test('Clearing nested errors when a field is updated', (done) => {
+    const form = new Form({
+        name: {
+            first: 'Bob',
+            last: 'Marley',
+        },
+    });
+
+    form.submit('post', 'https://api.com')
+        .catch(() => {
+            expect(form.errors.has('name.first')).toBe(true);
+            expect(form.errors.has('name.last')).toBe(true);
+            form.name.first = 'Bill';
+            expect(form.errors.has('name.first')).toBe(false);
+            expect(form.errors.has('name.last')).toBe(true);
             done();
         });
 

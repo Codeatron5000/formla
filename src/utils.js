@@ -9,10 +9,6 @@ export function isFile(val: mixed): boolean %checks {
     return !!val && (val instanceof Blob);
 }
 
-export function clone(obj: any): any {
-    return JSON.parse(JSON.stringify(obj));
-}
-
 export function emptyValue(original: mixed): Array<any> | {} | '' | null {
     if (original instanceof Array) {
         return [];

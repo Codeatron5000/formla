@@ -29,17 +29,3 @@ test('Cloning data', () => {
     expect(form.email.label).toBe('work');
     expect(email.label).toBe('private');
 });
-
-test('Disabling cloning data', () => {
-    let email = { label: 'private', address: 'test@mail.com' };
-    const form = new Form({
-        email
-    }, {
-        clone: false,
-    });
-
-    form.email.label = 'work';
-
-    expect(form.email.label).toBe('work');
-    expect(email.label).toBe('work');
-});

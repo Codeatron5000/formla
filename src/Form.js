@@ -1,6 +1,7 @@
 // @flow
 import { extractFiles } from 'extract-files';
-import {isFile, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsFile, isStr, arrayToObject} from "./utils";
+import { sysObsKey, Observable } from './object-observer'
+import {isFile, hasOwn, emptyValue, isObj, isNil, isArr, containsFile, isStr, arrayToObject} from "./utils";
 import Errors from "./Errors";
 import http from "./http";
 import type { Method } from './flow';
@@ -29,7 +30,6 @@ type Options = {
     autoRemoveError: boolean,
     clear: boolean,
     quiet: boolean,
-    clone: boolean,
 }
 
 type PartialOptions = $Shape<Options>;
@@ -183,9 +183,6 @@ class Form {
 
         // When set to true, no errors will be recorded.
         quiet: false,
-
-        // If clone is set to false any nested objects and arrays will be stored in the form by reference.
-        clone: true,
     };
 
     static setOptions = function (options: Options) {
@@ -200,11 +197,17 @@ class Form {
 
         this.originalData = {};
         this.originalConstantData = {};
-        this.data = {};
+        this.data = Observable.from({});
 
         this.append(data);
 
         this.errors = new Errors();
+        // $FlowFixMe
+        this.data.observe(changes => {
+            changes.forEach(({ path }) => {
+                this.options.autoRemoveError && this.errors.clear(path.join('.'));
+            });
+        });
     }
 
     setOptions(options: ?Options) {
@@ -218,14 +221,13 @@ class Form {
     }
 
     append(key: string | Data, value: FormValue, constant: ?boolean = false): Form {
-        if (typeof key === 'object') {
+        if (isObj(key)) {
             Object.keys(key).forEach(field => {
                 this.append(field, key[field], constant);
             });
             return this;
         }
 
-        value = this.parseData(value);
         if (constant) {
             this.originalConstantData[key] = value;
         } else {
@@ -268,17 +270,16 @@ class Form {
     }
 
     getData(): Data {
-        return {
+        const data = {
             ...this.data,
             ...this.originalConstantData,
-        }
+        };
+        delete data[sysObsKey];
+        return data;
     }
 
     setData(key: string, value: FormValue) {
         this.data[key] = value;
-        if (this.options.autoRemoveError) {
-            this.errors.clear(key);
-        }
     }
 
     reset(): Form {
@@ -296,10 +297,6 @@ class Form {
             this.data[field] = emptyValue(this.data[field]);
         }
         return this;
-    }
-
-    parseData(data: FormValue): FormValue {
-        return this.options.clone && !isFile(data) ? clone(data) : data;
     }
 
     addFileFromEvent(event: Event | DragEvent, key: ?string): Form {
