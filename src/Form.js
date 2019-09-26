@@ -343,7 +343,7 @@ class Form {
 
     graphql(query: string, options: ?Options): Promise<any> {
         options = options || {};
-        const originalFormatDataCallback = options.formatData;
+        const originalFormatDataCallback = options.formatData || this.options.formatData;
 
         options.url = options.graphql || this.options.graphql;
 
