@@ -37,6 +37,7 @@ test('Cloning appended data', () => {
     form.email.label = 'work';
 
     expect(form.email.label).toBe('work');
+    expect(form.originalData.email.label).toBe('private');
     expect(email.label).toBe('private');
 });
 
@@ -50,5 +51,6 @@ test('Disabling cloning appended data', () => {
     form.email.label = 'work';
 
     expect(form.email.label).toBe('work');
+    expect(form.originalData.email.label).toBe('private');
     expect(email.label).toBe('work');
 });

@@ -1,10 +1,10 @@
 // @flow
 import { extractFiles } from 'extract-files';
-import {isFile, clone, hasOwn, emptyValue, isObj, isNil, isArr, containsFile, isStr, arrayToObject} from "./utils";
-import Errors from "./Errors";
-import http from "./http";
+import type { ErrorValues } from './Errors';
+import Errors from './Errors';
 import type { Method } from './flow';
-import type { ErrorValues } from "./Errors";
+import http from './http';
+import { arrayToObject, clone, containsFile, emptyValue, hasOwn, isArr, isFile, isNil, isObj, isStr } from './utils';
 
 type PrimitiveFormValue = string | number | boolean | null | typeof undefined;
 
@@ -229,7 +229,7 @@ class Form {
         if (constant) {
             this.originalConstantData[key] = value;
         } else {
-            this.originalData[key] = value;
+            this.originalData[key] = isFile(value) ? value : clone(value);
         }
         if (!constant) {
             this.data[key] = value;
