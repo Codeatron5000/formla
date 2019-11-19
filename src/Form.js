@@ -34,6 +34,66 @@ type Options = {
 
 type PartialOptions = $Shape<Options>;
 
+function set(obj: FormValue, keys: number|string|string[], value: FormValue) {
+    if (isStr(keys) || (typeof keys === 'number')) {
+        keys = (''+keys).split('.');
+    }
+
+    let key = keys.pop();
+
+    if (!isObj(obj) || isFile(obj)) {
+        return;
+    }
+
+    if (!keys.length) {
+        if (isArr(obj)) {
+            obj[+key] = value;
+        } else {
+            obj[key] = value;
+        }
+    } else {
+        if (!hasOwn(obj, key)) {
+            if (isArr(obj)) {
+                obj[+key] = key === '0' ? [] : {};
+            } else {
+                obj[key] = key === '0' ? [] : {};
+            }
+        }
+        if (isArr(obj)) {
+            set(obj[+key], keys, value);
+        } else {
+            set(obj[key], keys, value);
+        }
+    }
+}
+
+function get(obj: FormValue, keys: string|string[]): FormValue {
+    if (isStr(keys)) {
+        keys = keys.split('.');
+    }
+
+    let key = keys.pop();
+
+    if (!isObj(obj) || isFile(obj) || !hasOwn(obj, key)) {
+        return undefined;
+    }
+
+    let result: FormValue;
+
+    if (isArr(obj)) {
+        result = obj[+key];
+    } else if (isObj(obj) && !isFile(obj)) {
+        result = obj[key];
+    } else {
+        result = undefined;
+    }
+
+    if (!keys.length) {
+        return result;
+    }
+    get(result, keys);
+}
+
 function parseOptions(method: ?(Method | PartialOptions), url: ?(string | PartialOptions), options: ?PartialOptions): PartialOptions {
     method = method ? (isObj(method) ? method : { method }) : {};
     url = url ? (isObj(url) ? url : { url }) : {};
@@ -218,7 +278,7 @@ class Form {
     }
 
     append(key: string | Data, value: FormValue, constant: ?boolean = false): Form {
-        if (typeof key === 'object') {
+        if (isObj(key)) {
             Object.keys(key).forEach(field => {
                 this.append(field, key[field], constant);
             });
@@ -227,12 +287,12 @@ class Form {
 
         value = this.parseData(value);
         if (constant) {
-            this.originalConstantData[key] = value;
+            set(this.originalConstantData, key, value);
         } else {
-            this.originalData[key] = isFile(value) ? value : clone(value);
+            set(this.originalData, key, this.parseData(value));
         }
         if (!constant) {
-            this.data[key] = value;
+            set(this.data, key, value);
             this.defineProperty(key);
         } else {
             Object.defineProperty(
@@ -255,7 +315,7 @@ class Form {
             this,
             key,
             {
-                get: () => this.data[key],
+                get: () => get(this.data, key),
                 set: (newValue: FormValue) => {
                     this.setData(key, newValue);
                 }
@@ -275,7 +335,7 @@ class Form {
     }
 
     setData(key: string, value: FormValue) {
-        this.data[key] = value;
+        set(this.data, key, value);
         if (this.options.autoRemoveError) {
             this.errors.clear(key);
         }
@@ -283,7 +343,7 @@ class Form {
 
     reset(): Form {
         for (let field in this.data) {
-            this.data[field] = this.originalData[field];
+            set(this.data, field, this.parseData(get(this.originalData, field)));
         }
 
         this.errors.clear();
@@ -293,13 +353,13 @@ class Form {
 
     clear(field: string): Form {
         if (hasOwn(this, field)) {
-            this.data[field] = emptyValue(this.data[field]);
+            set(this.data, field, emptyValue(get(this.data, field)));
         }
         return this;
     }
 
     parseData(data: FormValue): FormValue {
-        return this.options.clone && !isFile(data) ? clone(data) : data;
+        return this.options.clone ? clone(data) : data;
     }
 
     addFileFromEvent(event: Event | DragEvent, key: ?string): Form {

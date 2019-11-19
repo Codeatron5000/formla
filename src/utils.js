@@ -10,7 +10,22 @@ export function isFile(val: mixed): boolean %checks {
 }
 
 export function clone(obj: any): any {
-    return JSON.parse(JSON.stringify(obj));
+    if (isArr(obj)) {
+        return obj.map(clone);
+    }
+    if (obj === null || obj === undefined) {
+        return null;
+    }
+    if (isFile(obj) || ['number', 'string', 'boolean'].includes(typeof obj)) {
+        return obj;
+    }
+    if (isObj(obj)) {
+        let target = {};
+
+        Object.keys(obj).forEach((key) => target[key] = clone(obj[key]));
+
+        return target;
+    }
 }
 
 export function emptyValue(original: mixed): Array<any> | {} | '' | null {
