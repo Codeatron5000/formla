@@ -39,7 +39,7 @@ function set(obj: FormValue, keys: number|string|string[], value: FormValue) {
         keys = (''+keys).split('.');
     }
 
-    let key = keys.pop();
+    let key = keys.shift();
 
     if (!isObj(obj) || isFile(obj)) {
         return;
@@ -72,7 +72,7 @@ function get(obj: FormValue, keys: string|string[]): FormValue {
         keys = keys.split('.');
     }
 
-    let key = keys.pop();
+    let key = keys.shift();
 
     if (!isObj(obj) || isFile(obj) || !hasOwn(obj, key)) {
         return undefined;
