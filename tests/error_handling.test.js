@@ -32,7 +32,7 @@ test('The form has errors after an invalid request', (done) => {
 
     form.submit('post', 'https://api.com')
         .catch(() => {
-            expect(form.errors.any()).toBe(true);
+            expect(form._errors.any()).toBe(true);
             done();
         });
 
@@ -49,7 +49,7 @@ test('The status code for validation errors can be changed', (done) => {
 
     let wrongCodeRequest = wrongCodeForm.submit('post', 'https://api.com')
         .catch((e) => {
-            expect(wrongCodeForm.errors.any()).toBe(false);
+            expect(wrongCodeForm._errors.any()).toBe(false);
         });
 
     mockXHR.onload();
@@ -63,7 +63,7 @@ test('The status code for validation errors can be changed', (done) => {
 
     let rightCodeRequest = rightCodeForm.submit('post', 'https://api.com')
         .catch((e) => {
-            expect(rightCodeForm.errors.any()).toBe(true);
+            expect(rightCodeForm._errors.any()).toBe(true);
         });
 
     mockXHR.onload();
@@ -87,7 +87,7 @@ test('The response can be modified to the correct response', (done) => {
 
     let wrongErrorRequest = wrongErrorForm.submit('post', 'https://api.com')
         .catch((e) => {
-            expect(wrongErrorForm.errors.any()).toBe(false);
+            expect(wrongErrorForm._errors.any()).toBe(false);
             expect(e instanceof Error).toBe(true)
         });
 
@@ -113,7 +113,7 @@ test('The response can be modified to the correct response', (done) => {
 
     let rightErrorRequest = rightErrorForm.submit('post', 'https://api.com')
         .catch((e) => {
-            expect(rightErrorForm.errors.any()).toBe(true);
+            expect(rightErrorForm._errors.any()).toBe(true);
         });
 
     mockXHR.onload();
@@ -131,7 +131,7 @@ test('The form errors can be silenced in options', (done) => {
 
     form.submit('post', 'https://api.com')
         .catch(() => {
-            expect(form.errors.any()).toBe(false);
+            expect(form._errors.any()).toBe(false);
             done();
         });
 
@@ -146,8 +146,8 @@ test('Checking if the form has a certain error', (done) => {
 
     form.submit('post', 'https://api.com')
         .catch(() => {
-            expect(form.errors.has('username')).toBe(true);
-            expect(form.errors.has('nothing')).toBe(false);
+            expect(form._errors.has('username')).toBe(true);
+            expect(form._errors.has('nothing')).toBe(false);
             done();
         });
 
@@ -162,12 +162,12 @@ test('Getting a certain error', (done) => {
 
     form.submit('post', 'https://api.com')
         .catch(() => {
-            expect(form.errors.get('username')).toBe('That username has already been taken');
-            expect(form.errors.get('password')).toEqual([
+            expect(form._errors.get('username')).toBe('That username has already been taken');
+            expect(form._errors.get('password')).toEqual([
                 'The password cannot be less than 6 characters',
                 'The password must contain letters and numbers',
             ]);
-            expect(form.errors.get('nothing')).toBe(undefined);
+            expect(form._errors.get('nothing')).toBe(undefined);
             done();
         });
 
@@ -182,9 +182,9 @@ test('Getting the first error', (done) => {
 
     form.submit('post', 'https://api.com')
         .catch(() => {
-            expect(form.errors.getFirst('username')).toBe('That username has already been taken');
-            expect(form.errors.getFirst('password')).toBe('The password cannot be less than 6 characters');
-            expect(form.errors.getFirst('nothing')).toBe(undefined);
+            expect(form._errors.getFirst('username')).toBe('That username has already been taken');
+            expect(form._errors.getFirst('password')).toBe('The password cannot be less than 6 characters');
+            expect(form._errors.getFirst('nothing')).toBe(undefined);
             done();
         });
 
@@ -199,9 +199,9 @@ test('Clearing the errors', (done) => {
 
     form.submit('post', 'https://api.com')
         .catch(() => {
-            expect(form.errors.any()).toBe(true);
-            form.errors.clear();
-            expect(form.errors.any()).toBe(false);
+            expect(form._errors.any()).toBe(true);
+            form._errors.clear();
+            expect(form._errors.any()).toBe(false);
             done();
         });
 
@@ -219,10 +219,10 @@ test('Clearing the errors after timeout', (done) => {
     form.submit('post', 'https://api.com')
         .catch(() => {
             setTimeout(() => {
-                expect(form.errors.any()).toBe(true);
+                expect(form._errors.any()).toBe(true);
             }, 90);
             setTimeout(() => {
-                expect(form.errors.any()).toBe(false);
+                expect(form._errors.any()).toBe(false);
                 done();
             }, 101);
         });
@@ -238,11 +238,11 @@ test('Clearing errors when a field is updated', (done) => {
 
     form.submit('post', 'https://api.com')
         .catch(() => {
-            expect(form.errors.has('username')).toBe(true);
-            expect(form.errors.has('password')).toBe(true);
+            expect(form._errors.has('username')).toBe(true);
+            expect(form._errors.has('password')).toBe(true);
             form.username = 'Bill';
-            expect(form.errors.has('username')).toBe(false);
-            expect(form.errors.has('password')).toBe(true);
+            expect(form._errors.has('username')).toBe(false);
+            expect(form._errors.has('password')).toBe(true);
             done();
         });
 
@@ -259,9 +259,9 @@ test('Clearing errors when a field is updated can be disabled', (done) => {
 
     form.submit('post', 'https://api.com')
         .catch(() => {
-            expect(form.errors.has('username')).toBe(true);
+            expect(form._errors.has('username')).toBe(true);
             form.username = 'Bill';
-            expect(form.errors.has('username')).toBe(true);
+            expect(form._errors.has('username')).toBe(true);
             done();
         });
 

@@ -175,12 +175,12 @@ function isValidErrorObject(errors) {
 
 class Form {
 
-    errors: Errors;
+    _errors: Errors;
 
-    data: Data;
-    originalData: Data;
-    originalConstantData: Data;
-    options: Options;
+    _data: Data;
+    _originalData: Data;
+    _originalConstantData: Data;
+    _options: Options;
 
     static defaultOptions: Options = {
         // The default method type used by the submit method
@@ -258,20 +258,20 @@ class Form {
     constructor(data: Data, options: ?Options) {
         this.setOptions(options);
 
-        this.originalData = {};
-        this.originalConstantData = {};
-        this.data = {};
+        this._originalData = {};
+        this._originalConstantData = {};
+        this._data = {};
 
         this.append(data);
 
-        this.errors = new Errors();
+        this._errors = new Errors();
     }
 
     setOptions(options: ?Options) {
-        this.options = this.options || Form.defaultOptions;
+        this._options = this._options || Form.defaultOptions;
         if (options) {
-            this.options = {
-                ...this.options,
+            this._options = {
+                ...this._options,
                 ...options,
             }
         }
@@ -287,12 +287,12 @@ class Form {
 
         value = this.parseData(value);
         if (constant) {
-            set(this.originalConstantData, key, value);
+            set(this._originalConstantData, key, value);
         } else {
-            set(this.originalData, key, this.parseData(value));
+            set(this._originalData, key, this.parseData(value));
         }
         if (!constant) {
-            set(this.data, key, value);
+            set(this._data, key, value);
             this.defineProperty(key);
         } else {
             Object.defineProperty(
@@ -315,7 +315,7 @@ class Form {
             this,
             key,
             {
-                get: () => get(this.data, key),
+                get: () => get(this._data, key),
                 set: (newValue: FormValue) => {
                     this.setData(key, newValue);
                 }
@@ -329,37 +329,37 @@ class Form {
 
     getData(): Data {
         return {
-            ...this.data,
-            ...this.originalConstantData,
+            ...this._data,
+            ...this._originalConstantData,
         }
     }
 
     setData(key: string, value: FormValue) {
-        set(this.data, key, value);
-        if (this.options.autoRemoveError) {
-            this.errors.clear(key);
+        set(this._data, key, value);
+        if (this._options.autoRemoveError) {
+            this._errors.clear(key);
         }
     }
 
     reset(): Form {
-        for (let field in this.data) {
-            set(this.data, field, this.parseData(get(this.originalData, field)));
+        for (let field in this._data) {
+            set(this._data, field, this.parseData(get(this._originalData, field)));
         }
 
-        this.errors.clear();
+        this._errors.clear();
 
         return this;
     }
 
     clear(field: string): Form {
         if (hasOwn(this, field)) {
-            set(this.data, field, emptyValue(get(this.data, field)));
+            set(this._data, field, emptyValue(get(this._data, field)));
         }
         return this;
     }
 
     parseData(data: FormValue): FormValue {
-        return this.options.clone ? clone(data) : data;
+        return this._options.clone ? clone(data) : data;
     }
 
     addFileFromEvent(event: Event | DragEvent, key: ?string): Form {
@@ -403,9 +403,9 @@ class Form {
 
     graphql(query: string, options: ?Options): Promise<any> {
         options = options || {};
-        const originalFormatDataCallback = options.formatData || this.options.formatData;
+        const originalFormatDataCallback = options.formatData || this._options.formatData;
 
-        options.url = options.graphql || this.options.graphql;
+        options.url = options.graphql || this._options.graphql;
 
         options.useJson = !this.hasFile();
 
@@ -433,7 +433,7 @@ class Form {
     submit(method: Method | Options, url: ?string | Options, options: ?Options): Promise<any> {
         options = parseOptions(method, url, options);
         const requestOptions = {
-            ...this.options,
+            ...this._options,
             ...options,
         };
 
@@ -468,7 +468,7 @@ class Form {
     }
 
     shouldConvertToFormData(options: ?Options) {
-        options = options || this.options;
+        options = options || this._options;
         if (!options.useJson) {
             return true;
         }
@@ -483,25 +483,25 @@ class Form {
     }
 
     onSuccess(options: ?Options) {
-        options = options || this.options;
+        options = options || this._options;
         if (options.clear) {
             this.reset();
         }
     }
 
     onFail(error: XMLHttpRequest, options: ?Options) {
-        options = options || this.options;
+        options = options || this._options;
         if (!options.quiet) {
             let errors = options.formatErrorResponse(error);
-            this.errors.record(errors, options.timeout);
-            if (this.errors.hasElements()) {
-                this.errors.scrollToFirst();
+            this._errors.record(errors, options.timeout);
+            if (this._errors.hasElements()) {
+                this._errors.scrollToFirst();
             }
         }
     }
 
     buildBaseUrl(options: ?Options) {
-        options = options || this.options;
+        options = options || this._options;
         if (options.url.includes('://')) {
             return options.url;
         }
@@ -536,15 +536,15 @@ class Form {
     }
 
     addElement(key: string, el: HTMLElement) {
-        this.errors.addElement(key, el);
+        this._errors.addElement(key, el);
     }
 
     removeElement(el: HTMLElement) {
-        this.errors.removeElement(el);
+        this._errors.removeElement(el);
     }
 
     removeElementKey(key: string) {
-        this.errors.removeElementKey(key);
+        this._errors.removeElementKey(key);
     }
 }
 
