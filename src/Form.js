@@ -341,6 +341,10 @@ class Form {
         }
     }
 
+    errors(): Errors {
+        return this._errors;
+    }
+
     reset(): Form {
         for (let field in this._data) {
             set(this._data, field, this.parseData(get(this._originalData, field)));
