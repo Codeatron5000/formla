@@ -114,7 +114,7 @@ test('Submitting a form with useJson reverts to FormData', () => {
     expect(submittedData.get('file')).toBe(file);
 });
 
-test('Submitting a file with useJson in strict mode throws an error', () => {
+test('Submitting a file with useJson in strict mode will still use JSON', () => {
     const file = new File(['foo'], 'foo.txt', {
         type: 'text/plain',
     });
@@ -123,13 +123,13 @@ test('Submitting a file with useJson in strict mode throws an error', () => {
     }, {
         useJson: true,
         strictMode: true,
+        sendWith(method, url, data) {
+            expect(data instanceof FormData).toBe(false);
+            return Promise.resolve(true);
+        }
     });
 
-    const t = () => {
-        form.submit('post', 'https://api.com');
-    };
-
-    expect(t).toThrow(Error);
+    form.submit('post', 'https://api.com');
 });
 
 test('Submitting a request with a base url', () => {

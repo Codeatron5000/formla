@@ -205,7 +205,7 @@ class Form {
         // If the data contains a File or Blob object the data will be a FormData object regardless of this option (unless strictMode is true).
         useJson: false,
 
-        // If set to true the form will throw an Error if the data has a File or Blob object and the useJson option is true.
+        // If set to true the form will use follow the `useJson` option even if the data contains non JSONable values (including files).
         strictMode: false,
 
         // The status code for which the form should handle validation errors.
@@ -473,13 +473,10 @@ class Form {
 
     shouldConvertToFormData(options: ?Options) {
         options = options || this._options;
-        if (!options.useJson) {
-            return true;
+        if (options.strictMode) {
+            return !options.useJson;
         }
-        if (this.hasFile() && options.strictMode) {
-            throw new Error('Cannot convert a file to JSON');
-        }
-        return this.hasFile();
+        return !options.useJson || this.hasFile();
     }
 
     hasFile(): boolean {

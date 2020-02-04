@@ -340,8 +340,8 @@ Form.setOptions({
     // object regardless of this option (unless strictMode is true).
     useJson: false,
 
-    // If set to true the form will throw an Error if the data has a File or
-    // Blob object and the useJson option is true.
+    // If set to true the form will use follow the `useJson` option even if the
+    // data contains non JSONable values (including files).
     strictMode: false,
 
     // The status code for which the form should handle validation errors.
