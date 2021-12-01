@@ -356,7 +356,7 @@ class Form {
     reset(): Form {
         const originalData = this._dataCb ? this._dataCb() : this._originalData;
         for (let field in this._data) {
-            set(this._data, field, this.parseData(get(originalData, field)));
+            set(this, field, this.parseData(get(originalData, field)));
         }
 
         this._errors.clear();

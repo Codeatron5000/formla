@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import Form from '../src/Form';
 
 let mockXHR;
