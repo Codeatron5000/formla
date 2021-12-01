@@ -4,7 +4,7 @@ import type { ErrorValues } from './Errors';
 import Errors from './Errors';
 import type { Method } from './flow';
 import http from './http';
-import { arrayToObject, clone, containsFile, emptyValue, hasOwn, isArr, isFile, isNil, isObj, isStr } from './utils';
+import { arrayToObject, clone, containsFile, emptyValue, hasOwn, isArr, isFile, isNil, isObj, isStr, isFunc } from './utils';
 
 type PrimitiveFormValue = string | number | boolean | null | typeof undefined;
 
@@ -13,6 +13,8 @@ type ScalarFormValue = PrimitiveFormValue | Blob | File;
 type FormValue = ScalarFormValue | Array<?FormValue> | { [string]: ?FormValue };
 
 export type Data = { [string]: FormValue };
+
+type DataCb = () => Data;
 
 type Options = {
     method: Method,
@@ -178,6 +180,7 @@ class Form {
     _errors: Errors;
 
     _data: Data;
+    _dataCb: ?DataCb;
     _originalData: Data;
     _originalConstantData: Data;
     _options: Options;
@@ -255,8 +258,13 @@ class Form {
         };
     };
 
-    constructor(data: Data, options: ?Options) {
+    constructor(data: Data|DataCb, options: ?Options) {
         this.setOptions(options);
+
+        if (isFunc(data)) {
+            this._dataCb = data;
+            data = data();
+        }
 
         this._originalData = {};
         this._originalConstantData = {};
@@ -346,8 +354,9 @@ class Form {
     }
 
     reset(): Form {
+        const originalData = this._dataCb ? this._dataCb() : this._originalData;
         for (let field in this._data) {
-            set(this._data, field, this.parseData(get(this._originalData, field)));
+            set(this._data, field, this.parseData(get(originalData, field)));
         }
 
         this._errors.clear();

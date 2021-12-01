@@ -10,6 +10,22 @@ test('Appending data to the form', () => {
     expect(form.getData()).toEqual({ name: 'Bob' });
 });
 
+test('Appending data to the form with callback', () => {
+    const form = new Form(() => ({}));
+
+    form.append('name', 'Bob');
+
+    expect(form.name).toBe('Bob');
+
+    expect(form.getData()).toEqual({ name: 'Bob' });
+
+    form.reset();
+
+    expect(form.name).toBeNull();
+
+    expect(form.getData()).toEqual({ name: null });
+});
+
 test('Appending a data object to the form', () => {
     const form = new Form({});
 

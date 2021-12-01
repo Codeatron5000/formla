@@ -1,6 +1,6 @@
 const webpack = require('webpack');
 const path = require('path');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 function generateConfig(name) {
     const uglify = name.indexOf('min') > -1;
@@ -12,9 +12,6 @@ function generateConfig(name) {
             sourceMapFilename: name + '.map',
             library: 'formla',
             libraryTarget: 'umd',
-        },
-        node: {
-            process: false
         },
         mode: 'production',
         optimization: {
@@ -43,9 +40,7 @@ function generateConfig(name) {
     };
 
     if (uglify) {
-        config.optimization.minimizer = [new UglifyJsPlugin({
-            sourceMap: true,
-        })];
+        config.optimization.minimizer = [new TerserPlugin()];
     }
 
     return config;

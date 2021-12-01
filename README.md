@@ -25,6 +25,17 @@ const form = new Form({
 });
 ```
 
+Alternately you can pass a callback that will get resolved and will be used when resetting the form.
+
+```js
+import Form from 'formla';
+
+const form = new Form(() => ({
+    username: '',
+    password: '',
+}));
+```
+
 ### Append data
 You can add fields to the form after instantiation using the `append` method.
 
