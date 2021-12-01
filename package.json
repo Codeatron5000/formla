@@ -1,6 +1,6 @@
 {
   "name": "formla",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "A form object that makes sending ajax forms a breeze",
   "main": "lib/Form.js",
   "scripts": {
