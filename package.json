@@ -24,7 +24,7 @@
     "@babel/preset-flow": "^7.0.0",
     "babel-jest": "^27.0.0",
     "babel-loader": "^8.0.6",
-    "flow-bin": "^0.165.1",
+    "flow-bin": "^0.100.0",
     "jest": "^27.0.0",
     "terser-webpack-plugin": "^5.2.5",
     "webpack": "^5.0.0",

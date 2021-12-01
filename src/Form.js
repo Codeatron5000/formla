@@ -270,6 +270,7 @@ class Form {
         this._originalConstantData = {};
         this._data = {};
 
+        // $FlowFixMe
         this.append(data);
 
         this._errors = new Errors();
