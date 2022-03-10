@@ -32,6 +32,7 @@ type Options = {
     clear: boolean,
     quiet: boolean,
     clone: boolean,
+    addAppendToDataCallback: boolean,
 }
 
 type PartialOptions = $Shape<Options>;
@@ -249,6 +250,11 @@ class Form {
 
         // If clone is set to false any nested objects and arrays will be stored in the form by reference.
         clone: true,
+
+        // If the form is called with a callback constructor then any data added
+        // later will be included when the form is reset. Set this to false to
+        // have the form reset using just the callback.
+        addAppendToDataCallback: true,
     };
 
     static setOptions = function (options: Options) {
@@ -271,7 +277,7 @@ class Form {
         this._data = {};
 
         // $FlowFixMe
-        this.append(data);
+        this.append(data, undefined, false, false);
 
         this._errors = new Errors();
     }
@@ -286,10 +292,27 @@ class Form {
         }
     }
 
-    append(key: string | Data, value: FormValue, constant: ?boolean = false): Form {
+    append(key: string | Data, value: FormValue, constant: ?boolean = false, addToDataCallback: ?boolean = true): Form {
+        if (this._dataCb && !constant && this._options.addAppendToDataCallback && addToDataCallback) {
+            const originalCb = this._dataCb;
+            this._dataCb = () => {
+                const data = originalCb();
+                if (isObj(key)) {
+                    return {
+                        ...data,
+                        ...key
+                    };
+                }
+                return {
+                    ...data,
+                    [key]: value,
+                };
+            }
+        }
+
         if (isObj(key)) {
             Object.keys(key).forEach(field => {
-                this.append(field, key[field], constant);
+                this.append(field, key[field], constant, false);
             });
             return this;
         }
@@ -324,6 +347,8 @@ class Form {
             this,
             key,
             {
+                configurable: true,
+                enumerable: true,
                 get: () => get(this._data, key),
                 set: (newValue: FormValue) => {
                     this.setData(key, newValue);
@@ -333,7 +358,7 @@ class Form {
     }
 
     constantData(key: string | Data, value: FormValue): Form {
-        return this.append(key, value, true);
+        return this.append(key, value, true, false);
     }
 
     getData(): Data {
@@ -356,9 +381,15 @@ class Form {
 
     reset(): Form {
         const originalData = this._dataCb ? this._dataCb() : this._originalData;
+
         for (let field in this._data) {
-            set(this, field, this.parseData(get(originalData, field)));
+            delete this[field];
         }
+
+        this._originalData = {};
+        this._data = {};
+
+        this.append(originalData, undefined, false, false);
 
         this._errors.clear();
 

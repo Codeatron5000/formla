@@ -379,5 +379,10 @@ Form.setOptions({
 
     // When set to true, no errors will be recorded.
     quiet: false,
+    
+    // When instantiating the form with a callback any fields appended to the
+    // form after construction are included in the form after reset. Set this
+    // field to false to reset the form only using the callback supplied.
+    addAppendToDataCallback: true,
 });
 ```

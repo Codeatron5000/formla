@@ -24,9 +24,23 @@ test('Appending data to the form with callback', () => {
 
     form.reset();
 
-    expect(form.name).toBeNull();
+    expect(form.name).toBe('Bob')
 
-    expect(form.getData()).toEqual({ name: null });
+    expect(form.getData()).toEqual({ name: 'Bob' });
+});
+
+test('Disable appending data to the form with callback', () => {
+    const form = new Form(() => ({}), { addAppendToDataCallback: false });
+
+    form.append('name', 'Bob');
+
+    expect(form.name).toBe('Bob');
+
+    expect(form.getData()).toEqual({ name: 'Bob' });
+
+    form.reset();
+
+    expect(form.name).toBeUndefined()
 });
 
 test('Appending a data object to the form', () => {

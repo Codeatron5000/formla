@@ -13,9 +13,19 @@ test('Accessing properties passed to the form', () => {
 
 test('Properties passed to the form with a callback', () => {
     let name = 'Bob';
-    const form = new Form(() => ({ name }));
+    let secondName;
+    const form = new Form(() => {
+        const data = { name };
+        if (secondName) {
+            data.secondName = secondName;
+        } else {
+            secondName = 'Ted';
+        }
+        return data;
+    });
 
     expect(form.name).toBe('Bob');
+    expect(form.secondName).toBeUndefined();
 
     expect(form.getData()).toEqual({ name: 'Bob' });
 
@@ -24,6 +34,9 @@ test('Properties passed to the form with a callback', () => {
     form.reset();
 
     expect(form.name).toBe('Bill');
+    expect(form.secondName).toBe('Ted');
+
+    expect(form.getData()).toEqual({ name: 'Bill', secondName: 'Ted' });
 });
 
 test('Modifying data on the form', () => {
