@@ -383,6 +383,7 @@ class Form {
         const originalData = this._dataCb ? this._dataCb() : this._originalData;
 
         for (let field in this._data) {
+            // $FlowFixMe
             delete this[field];
         }
 
