@@ -144,7 +144,7 @@ class Errors {
             }
         });
 
-        if (element && !isInViewport(element)) {
+        if (element && !isInViewport(element.el)) {
             element.el.scrollIntoView(options);
         }
     }
