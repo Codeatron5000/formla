@@ -1,5 +1,5 @@
 // @flow
-import {escapeRegExp, isArr, isNil} from "./utils";
+import { escapeRegExp, isArr, isInViewport, isNil } from "./utils";
 
 type ErrorValue = string | Array<string>;
 export type ErrorValues = { [string]: ErrorValue };
@@ -144,7 +144,7 @@ class Errors {
             }
         });
 
-        if (element) {
+        if (element && !isInViewport(element)) {
             element.el.scrollIntoView(options);
         }
     }

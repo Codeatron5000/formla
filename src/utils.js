@@ -97,3 +97,8 @@ export function arrayToObject(array: any[]): { [string]: any } {
 
     return target;
 }
+
+export function isInViewport(el: Element) {
+    const boundingBox = el.getBoundingClientRect();
+    return boundingBox.top >= 0 && boundingBox.bottom <= (window.innerHeight && document.documentElement.clientHeight);
+}
