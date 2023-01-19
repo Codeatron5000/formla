@@ -194,6 +194,32 @@ test('Getting the first error', (done) => {
     mockXHR.onload();
 });
 
+test('Getting the first error with a wildcard', (done) => {
+    mockXHR.response = {
+        errors: {
+            key1: 'Invalid key',
+            key2: ['Invalid other key', 'Bad request'],
+        }
+    };
+    const form = new Form({
+        key1: 'Bob',
+        key2: 'Passw0rd!',
+    });
+
+    form.submit('post', 'https://api.com')
+        .catch(() => {
+            expect(form._errors.getFirst('key*')).toBe('Invalid key');
+            expect(form._errors.get('key*')).toEqual([
+                'Invalid key',
+                'Invalid other key',
+                'Bad request',
+            ]);
+            done();
+        });
+
+    mockXHR.onload();
+});
+
 test('Clearing the errors', (done) => {
     const form = new Form({
         username: 'Bob',

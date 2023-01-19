@@ -41,8 +41,8 @@ class Errors {
      *
      * @param {string} field
      */
-    getFirst(field: string): ?string {
-        let error = this.get(field);
+    getFirst(field: string, matchWildCards: boolean = true): ?string {
+        let error = this.get(field, matchWildCards);
         if (error) {
             if (isArr(error)) {
                 return error.length ? error[0] : null;
@@ -52,7 +52,24 @@ class Errors {
         }
     }
 
-    get(field: string) {
+    get(field: string, matchWildCards: boolean = true) {
+        if (field.includes('*') && matchWildCards) {
+            const regExpStr = field.replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+                .replace('*', '(.*)');
+            const regExp = new RegExp(regExpStr);
+            let errors = [];
+            Object.keys(this.errors).forEach((key) => {
+                if (regExp.test(key)) {
+                    const keyErrors = this.errors[key];
+                    if (isArr(keyErrors)) {
+                        errors = errors.concat(keyErrors);
+                    } else {
+                        errors.push(keyErrors);
+                    }
+                }
+            });
+            return errors;
+        }
         return this.errors[field];
     }
 
