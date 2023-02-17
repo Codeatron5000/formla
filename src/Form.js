@@ -109,22 +109,19 @@ function parseOptions(method: ?(Method | PartialOptions), url: ?(string | Partia
     }
 }
 
-function flattenToQueryParams(data: Data | Array<FormValue>, prefix: string = ''): { [string]: string | Blob | File } {
-    let params = {};
+function flattenToQueryParams(data: Data | Array<FormValue>, prefix: string = ''): Array<[ string, string | Blob | File ]> {
+    let params = [];
 
     if (isArr(data)) {
         data.forEach(item => {
             let paramKey = `${prefix}[]`;
 
             if (isObj(item) && !isFile(item)) {
-                params = {
-                    ...params,
-                    ...flattenToQueryParams(item, paramKey)
-                };
+                params = params.concat(flattenToQueryParams(item, paramKey));
                 return;
             }
 
-            params[paramKey] = isFile(item) ? item : formValueToString(item);
+            params.push([paramKey, isFile(item) ? item : formValueToString(item)]);
         })
     } else {
         Object.keys(data).forEach(key => {
@@ -133,14 +130,11 @@ function flattenToQueryParams(data: Data | Array<FormValue>, prefix: string = ''
             let paramKey = prefix ? `${prefix}[${key}]` : '' + key;
 
             if (isObj(item) && !isFile(item)) {
-                params = {
-                    ...params,
-                    ...flattenToQueryParams(item, paramKey)
-                };
+                params = params.concat(flattenToQueryParams(item, paramKey));
                 return;
             }
 
-            params[paramKey] = isFile(item) ? item : formValueToString(item);
+            params.push([paramKey, isFile(item) ? item : formValueToString(item)]);
         });
     }
 
@@ -489,8 +483,8 @@ class Form {
 
             let params = flattenToQueryParams(data);
 
-            Object.keys(params).forEach(key => {
-                formData.append(key, params[key]);
+            params.forEach(([key, param]) => {
+                formData.append(key, param);
             });
 
             data = formData;
@@ -566,9 +560,7 @@ class Form {
 
         let params = flattenToQueryParams(data);
 
-        Object.keys(params).forEach(key => {
-            let item = params[key];
-
+        params.forEach(([key, item]) => {
             if (isFile(item)) {
                 throw new Error('Cannot convert file to a string');
             }

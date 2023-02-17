@@ -99,6 +99,37 @@ test('Submitting json data', () => {
     }));
 });
 
+test('Submitting FormData', () => {
+    const file = new File(['foo'], 'foo.txt', {
+        type: 'text/plain',
+    });
+    const form = new Form({
+        file,
+        arr: [1, 2, 3],
+        key: 'value',
+        obj: {
+            key: 'value',
+        },
+    }, {
+        useJson: false,
+    });
+
+    form.submit('post', 'https://api.com');
+
+    const submittedData = mockXHR.send.mock.calls[0][0];
+
+    expect(submittedData instanceof FormData).toBe(true);
+    const entries = Array.from(submittedData.entries());
+    expect(entries).toEqual([
+        ['file', file],
+        ['arr[]', '1'],
+        ['arr[]', '2'],
+        ['arr[]', '3'],
+        ['key', 'value'],
+        ['obj[key]', 'value'],
+    ]);
+});
+
 test('Submitting a form with useJson reverts to FormData', () => {
     const file = new File(['foo'], 'foo.txt', {
         type: 'text/plain',
