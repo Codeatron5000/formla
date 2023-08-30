@@ -122,9 +122,9 @@ test('Submitting FormData', () => {
     const entries = Array.from(submittedData.entries());
     expect(entries).toEqual([
         ['file', file],
-        ['arr[]', '1'],
-        ['arr[]', '2'],
-        ['arr[]', '3'],
+        ['arr[0]', '1'],
+        ['arr[1]', '2'],
+        ['arr[2]', '3'],
         ['key', 'value'],
         ['obj[key]', 'value'],
     ]);

@@ -112,31 +112,18 @@ function parseOptions(method: ?(Method | PartialOptions), url: ?(string | Partia
 function flattenToQueryParams(data: Data | Array<FormValue>, prefix: string = ''): Array<[ string, string | Blob | File ]> {
     let params = [];
 
-    if (isArr(data)) {
-        data.forEach(item => {
-            let paramKey = `${prefix}[]`;
+    Object.keys(data).forEach(key => {
+        let item = data[key];
 
-            if (isObj(item) && !isFile(item)) {
-                params = params.concat(flattenToQueryParams(item, paramKey));
-                return;
-            }
+        let paramKey = prefix ? `${prefix}[${key}]` : '' + key;
 
-            params.push([paramKey, isFile(item) ? item : formValueToString(item)]);
-        })
-    } else {
-        Object.keys(data).forEach(key => {
-            let item = data[key];
+        if (isObj(item) && !isFile(item)) {
+            params = params.concat(flattenToQueryParams(item, paramKey));
+            return;
+        }
 
-            let paramKey = prefix ? `${prefix}[${key}]` : '' + key;
-
-            if (isObj(item) && !isFile(item)) {
-                params = params.concat(flattenToQueryParams(item, paramKey));
-                return;
-            }
-
-            params.push([paramKey, isFile(item) ? item : formValueToString(item)]);
-        });
-    }
+        params.push([paramKey, isFile(item) ? item : formValueToString(item)]);
+    });
 
     return params;
 }
