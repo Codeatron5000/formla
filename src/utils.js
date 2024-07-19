@@ -80,8 +80,8 @@ export function containsFile(obj: any): boolean {
             if (obj[key] instanceof File) {
                 return true;
             }
-            if (isObj(obj[key])) {
-                return containsFile(obj[key]);
+            if (isObj(obj[key]) && containsFile(obj[key])) {
+                return true;
             }
         }
     }

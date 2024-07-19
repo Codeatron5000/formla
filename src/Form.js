@@ -446,8 +446,10 @@ class Form {
         const originalFormatDataCallback = options.formatData || this._options.formatData;
 
         options.url = options.graphql || this._options.graphql;
-
-        options.useJson = !this.hasFile();
+        options.query = query;
+        if (typeof options.useJson === 'undefined') {
+            options.useJson = !this.hasFile();
+        }
 
         options.formatData = (data) => {
             data = originalFormatDataCallback ? originalFormatDataCallback(data) : data;
