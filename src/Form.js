@@ -20,6 +20,7 @@ type Options = {
     method: Method,
     baseUrl: string,
     url: string,
+    query: string,
     graphql: string,
     sendWith: (method: Method, url: string, data: FormData | Data, options: Options) => Promise<any>,
     useJson: boolean,
@@ -192,6 +193,8 @@ class Form {
 
         // The endpoint to use for all graphql queries
         graphql: 'graphql',
+
+        query: '',
 
         // A callback to implement custom HTTP logic.
         // It is recommended to use this option so the form can utilise your HTTP library.
