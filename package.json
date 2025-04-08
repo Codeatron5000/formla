@@ -39,7 +39,6 @@
     ]
   },
   "dependencies": {
-    "caniuse-lite": "^1.0.30001642",
     "extract-files": "^5.0.1"
   }
 }

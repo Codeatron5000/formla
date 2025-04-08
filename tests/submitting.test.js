@@ -236,3 +236,18 @@ test('Data can be modified before a request is sent', () => {
 
     expect(submittedData.get('name')).toBe('BOB');
 });
+
+test('baseUrl option is not passed to submit function', () => {
+    const form = new Form({
+        name: 'Bob',
+    }, {
+        baseUrl: 'https://api.com',
+        sendWith(method, url, data, options) {
+            expect(options.baseUrl).toBe(undefined);
+            expect(url).toBe('https://api.com/posts');
+            return Promise.resolve({});
+        }
+    });
+
+    form.submit('post', '/posts');
+});
