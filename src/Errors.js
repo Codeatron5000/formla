@@ -108,7 +108,8 @@ class Errors {
      */
     clear(field: ?string) {
         if (field) {
-            delete this.errors[field];
+            const { [field]: _, ...rest } = this.errors;
+            this.errors = rest;
 
             return;
         }
